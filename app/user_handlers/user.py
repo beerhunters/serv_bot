@@ -194,7 +194,7 @@ async def reg_contact(message: Message, state: FSMContext, l10n: FluentLocalizat
             message,
             l10n,
             "send_contact",  # Ключ для локализованного текста регистрации
-            reply_markup=kb.contact
+            reply_markup=kb.contact,
         )
 
 
