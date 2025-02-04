@@ -4,7 +4,7 @@ from os import environ
 # Поиск файла .env с переменными os
 load_env(read_file("dev.env"))
 
-# получение переменных конфигурации
+# Получение переменных конфигурации
 try:
     BOT_TOKEN = environ.get("BOT_TOKEN")
     RUBITIME_API_KEY = environ.get("RUBITIME_API_KEY")

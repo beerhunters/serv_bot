@@ -1,4 +1,4 @@
-import random
+# import random
 import re
 
 from aiogram import Router, F
@@ -14,7 +14,9 @@ from fluent.runtime import FluentLocalization
 
 from app.database.requests import create_or_update_user
 import app.user_kb.keyboards as kb
-from config import BOT_ADMINS, INFO_USER, BOT_OWNERS, GREETINGS_USER, GROUP_ID, REG_INFO
+
+# from config import BOT_ADMINS, INFO_USER, BOT_OWNERS, GREETINGS_USER, GROUP_ID, REG_INFO
+from config import BOT_ADMINS, BOT_OWNERS, GROUP_ID, REG_INFO
 from filters import IsUserFilter
 from tools.tools import send_localized_message
 
@@ -102,11 +104,12 @@ async def cmd_start(
         message.from_user.id, tg_username=message.from_user.username
     )
 
-    if user:
+    if user and user.name:
         await send_localized_message(
             message,
             l10n,
             "greeting",  # Ключ локализованного приветствия
+            # reply_markup=await kb.user_main(l10n),
             reply_markup=await kb.user_main(),
         )
         await state.clear()
@@ -115,7 +118,7 @@ async def cmd_start(
             message,
             l10n,
             "registration",  # Ключ для локализованного текста регистрации
-            reply_markup=await kb.user_main(),
+            # reply_markup=await kb.user_main(),
         )
         await state.set_state(Reg.name)
 
@@ -160,6 +163,7 @@ async def reg_name(message: Message, state: FSMContext, l10n: FluentLocalization
     await message.answer_photo(
         photo=input_file,
         caption=l10n.format_value("send_contact"),
+        # reply_markup=await kb.create_contact_button(l10n),
         reply_markup=kb.contact,
     )
 
@@ -194,6 +198,7 @@ async def reg_contact(message: Message, state: FSMContext, l10n: FluentLocalizat
             message,
             l10n,
             "send_contact",  # Ключ для локализованного текста регистрации
+            # reply_markup=await kb.create_contact_button(l10n),
             reply_markup=kb.contact,
         )
 
@@ -331,45 +336,60 @@ async def reg_email(message: Message, state: FSMContext, l10n: FluentLocalizatio
     )
     await state.clear()
 
+    # Создаем ссылку для приглашения
     invite_link = await message.bot.create_chat_invite_link(
         chat_id=GROUP_ID,
-        name="Вступить в группу",  # Название ссылки (опционально)
-        member_limit=1,  # Лимит (опционально, например, 1 пользователь)
+        name=l10n.format_value(
+            "join_group"
+        ),  # Используем локализованный текст для имени группы
+        member_limit=1,
     )
-
-    # Уведомление о регистрации
+    # Локализованный текст для успешной регистрации
     successfully_registered = (
-        f"✨Вы успешно прошли регистрацию!✨ \n\n"
+        l10n.format_value("registration_success")
+        + "\n\n"
         + REG_INFO.format(invite_link.invite_link)
     )
+    # await message.answer(successfully_registered, reply_markup=await kb.user_main(l10n))
     await message.answer(successfully_registered, reply_markup=await kb.user_main())
 
     # Разбиваем ФИО по пробелам
     name_parts = data["name"].split()
-    last_name = name_parts[0] if len(name_parts) > 0 else "Не указано"
-    first_name = name_parts[1] if len(name_parts) > 1 else "Не указано"
-    middle_name = name_parts[2] if len(name_parts) > 2 else "Не указано"
-
-    # Формируем сообщение для админов
-    info_new_user = (
-        "<b>👤 Новый резидент ✅</b> \n\n"
-        f"<b>📋 ФИО:</b>\n"
-        f"Фамилия: <code>{last_name}</code>\n"
-        f"Имя: <code>{first_name}</code>\n"
-        f"Отчество: <code>{middle_name}</code>\n"
-        f"<b>🎟️ TG: </b> {data['tg_username']}\n"
-        f"<b>☎️ Телефон: </b> <code>{data['contact']}</code>\n"
-        f"<b>📨 Email: </b> <code>{email}</code>\n"
+    last_name = (
+        name_parts[0] if len(name_parts) > 0 else l10n.format_value("not_provided")
     )
+    first_name = (
+        name_parts[1] if len(name_parts) > 1 else l10n.format_value("not_provided")
+    )
+    middle_name = (
+        name_parts[2] if len(name_parts) > 2 else l10n.format_value("not_provided")
+    )
+
+    # Локализованное сообщение для администраторов
+    info_new_user = (
+        f"<b>👤 {l10n.format_value('new_resident')} ✅</b> \n\n"
+        f"<b>📋 {l10n.format_value('user_data')}:</b>\n"
+        f"{l10n.format_value('last_name')}: <code>{last_name}</code>\n"
+        f"{l10n.format_value('first_name')}: <code>{first_name}</code>\n"
+        f"{l10n.format_value('middle_name')}: <code>{middle_name}</code>\n"
+        f"<b>🎟️ {l10n.format_value('tg_username')}: </b> {data['tg_username']}\n"
+        f"<b>☎️ {l10n.format_value('phone')}: </b> <code>{data['contact']}</code>\n"
+        f"<b>📨 {l10n.format_value('email')}: </b> <code>{email}</code>\n"
+    )
+
+    # Отправка сообщения каждому админу
     for admin in BOT_ADMINS:
         try:
             await message.bot.send_message(
-                admin, info_new_user, reply_markup=await kb.create_buttons()
+                # admin, info_new_user, reply_markup=await kb.create_buttons(l10n=l10n)
+                admin,
+                info_new_user,
+                reply_markup=await kb.create_buttons(),
             )
         except Exception as e:
             await message.bot.send_message(
                 BOT_OWNERS[0],
-                f"Пользователь {admin} не зарегистрирован в боте.\nОшибка: {e}",
+                f"{l10n.format_value('admin_error')}: {admin}\n{l10n.format_value('error_message')}: {e}",
             )
 
 
@@ -383,10 +403,11 @@ async def info(callback: CallbackQuery, l10n: FluentLocalization):
         callback,
         l10n,
         "info_user",  # Ключ для локализованного текста регистрации
+        # reply_markup=await kb.create_buttons(l10n=l10n),
         reply_markup=await kb.create_buttons(),
     )
 
 
 @user_router.message(Command("test_error"))
-async def test_error_handler(message: Message):
-    raise ValueError("Тестовая ошибка!")
+async def test_error_handler(message: Message, l10n: FluentLocalization):
+    raise ValueError(l10n.format_value("test_error"))
