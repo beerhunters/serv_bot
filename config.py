@@ -18,6 +18,7 @@ except (TypeError, ValueError) as ex:
 RULES_URL = "https://parta-works.ru/rules"
 LINK_BOT = "https://t.me/Parta_coworking_bot"
 GROUP_ID = -1002444417785
+ADMIN_URL = "https://t.me/partacoworking"
 
 GREETINGS_OWNER = [
     "Добро пожаловать, {}!",

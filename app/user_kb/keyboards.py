@@ -18,7 +18,7 @@ from app.database.requests import (
     # get_all_spaces,
 )
 from app.general_keyboards import create_buttons
-from config import RULES_URL
+from config import RULES_URL, ADMIN_URL
 
 contact = ReplyKeyboardMarkup(
     keyboard=[[KeyboardButton(text="📲Отправить контакт", request_contact=True)]],
@@ -484,8 +484,9 @@ async def user_main() -> InlineKeyboardMarkup:
         ("🧠 Квиз", "start_quiz", "callback"),
         ("📄 Общие правила", RULES_URL, "webapp"),
         ("❔ Информация", "info_user", "callback"),
+        ("📞 Связаться с Администратором", ADMIN_URL, "url"),
     ]
-    return await create_buttons(buttons_data)
+    return await create_buttons(buttons_data, main_menu=False)
 
 
 async def locations() -> InlineKeyboardMarkup:

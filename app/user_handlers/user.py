@@ -231,3 +231,8 @@ async def reg_email(message: Message, state: FSMContext):
 async def info(callback: CallbackQuery):
     await callback.message.edit_text(INFO_USER, reply_markup=await kb.create_buttons())
     await callback.answer()
+
+
+@user_router.message(Command("test_error"))
+async def test_error_handler(message: Message):
+    raise ValueError("Тестовая ошибка!")
