@@ -155,12 +155,14 @@ from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import CallbackQuery, Message
+from fluent.runtime import FluentLocalization
 
 import app.user_kb.keyboards as kb
 import app.calendar_keyboard.custom_calendar as cl
 from app.database.requests import create_guest, get_user_by_tg_id
 from config import BOT_ADMINS
 from filters import IsUserFilter
+from tools.tools import send_localized_message
 
 guest_router = Router()
 # Применяем фильтр для всех хэндлеров на уровне роутера
@@ -191,28 +193,74 @@ class RegGuest(StatesGroup):
     visit_date = State()
 
 
+# @guest_router.callback_query(F.data == "reg_guest")
+# async def reg_guest(callback: CallbackQuery, state: FSMContext):
+#     await callback.message.edit_text(MSG_ENTER_GUEST_COUNT)
+#     await state.set_state(RegGuest.guest_count)
 @guest_router.callback_query(F.data == "reg_guest")
-async def reg_guest(callback: CallbackQuery, state: FSMContext):
-    await callback.message.edit_text(MSG_ENTER_GUEST_COUNT)
+async def reg_guest(
+    callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization
+):
+    await send_localized_message(
+        callback,
+        l10n,
+        "msg_enter_guest_count",  # Ключ для локализованного текста регистрации
+    )
     await state.set_state(RegGuest.guest_count)
 
 
+# @guest_router.message(RegGuest.guest_count)
+# async def set_guest_count(message: Message, state: FSMContext):
+#     if not message.text.isdigit() or int(message.text) < 0:
+#         await message.answer(MSG_INVALID_GUEST_COUNT)
+#         return
+#
+#     guest_count = int(message.text)
+#     await state.update_data(guest_count=guest_count, current_guest=1, guests=[])
+#
+#     # Начинаем ввод данных для гостей
+#     await message.answer(MSG_ENTER_GUEST_DATA.format(1, MSG_ENTER_GUEST_NAME))
+#     await state.set_state(RegGuest.guest_name)
 @guest_router.message(RegGuest.guest_count)
-async def set_guest_count(message: Message, state: FSMContext):
+async def set_guest_count(
+    message: Message, state: FSMContext, l10n: FluentLocalization
+):
     if not message.text.isdigit() or int(message.text) < 0:
-        await message.answer(MSG_INVALID_GUEST_COUNT)
+        await send_localized_message(
+            message,
+            l10n,
+            "msg_invalid_guest_count",  # Ключ для локализованного текста регистрации
+            show_alert=True,
+        )
         return
 
     guest_count = int(message.text)
     await state.update_data(guest_count=guest_count, current_guest=1, guests=[])
-
+    current_guest = 1
+    guest_data_text = l10n.format_value("msg_enter_guest_data")
+    guest_data_text += f"{current_guest} - {l10n.format_value("msg_enter_guest_name")}"
     # Начинаем ввод данных для гостей
-    await message.answer(MSG_ENTER_GUEST_DATA.format(1, MSG_ENTER_GUEST_NAME))
+    await message.answer(guest_data_text)
     await state.set_state(RegGuest.guest_name)
 
 
+# @guest_router.message(RegGuest.guest_name)
+# async def set_guest_name(message: Message, state: FSMContext):
+#     data = await state.get_data()
+#     current_guest = data.get("current_guest")
+#     guests = data.get("guests", [])
+#
+#     # Добавляем имя текущего гостя в список
+#     if len(guests) < current_guest:
+#         guests.append({"name": message.text})
+#     else:
+#         guests[current_guest - 1]["name"] = message.text
+#
+#     await state.update_data(guests=guests)
+#     await message.answer(MSG_ENTER_GUEST_PHONE)
+#     await state.set_state(RegGuest.guest_phone)
 @guest_router.message(RegGuest.guest_name)
-async def set_guest_name(message: Message, state: FSMContext):
+async def set_guest_name(message: Message, state: FSMContext, l10n: FluentLocalization):
     data = await state.get_data()
     current_guest = data.get("current_guest")
     guests = data.get("guests", [])
@@ -224,14 +272,49 @@ async def set_guest_name(message: Message, state: FSMContext):
         guests[current_guest - 1]["name"] = message.text
 
     await state.update_data(guests=guests)
-    await message.answer(MSG_ENTER_GUEST_PHONE)
+    await send_localized_message(
+        message,
+        l10n,
+        "msg_enter_guest_phone",  # Ключ для локализованного текста регистрации
+    )
     await state.set_state(RegGuest.guest_phone)
 
 
+# @guest_router.message(RegGuest.guest_phone)
+# async def set_guest_phone(message: Message, state: FSMContext):
+#     if not message.text.isdigit():
+#         await message.answer(MSG_INVALID_PHONE)
+#         return
+#
+#     data = await state.get_data()
+#     current_guest = data.get("current_guest")
+#     guests = data.get("guests")
+#
+#     # Добавляем телефон к текущему гостю
+#     guests[current_guest - 1]["phone"] = message.text
+#     await state.update_data(guests=guests)
+#
+#     # Переход к следующему гостю или завершение сбора данных
+#     if current_guest == data.get("guest_count"):
+#         await message.answer(MSG_ENTER_OFFICE_NUMBER)
+#         await state.set_state(RegGuest.office_number)
+#     else:
+#         await state.update_data(current_guest=current_guest + 1)
+#         await message.answer(
+#             MSG_ENTER_GUEST_DATA.format(current_guest + 1, MSG_ENTER_GUEST_NAME)
+#         )
+#         await state.set_state(RegGuest.guest_name)
 @guest_router.message(RegGuest.guest_phone)
-async def set_guest_phone(message: Message, state: FSMContext):
+async def set_guest_phone(
+    message: Message, state: FSMContext, l10n: FluentLocalization
+):
     if not message.text.isdigit():
-        await message.answer(MSG_INVALID_PHONE)
+        await send_localized_message(
+            message,
+            l10n,
+            "msg_invalid_phone",  # Ключ для локализованного текста регистрации
+            show_alert=True,
+        )
         return
 
     data = await state.get_data()
@@ -244,40 +327,144 @@ async def set_guest_phone(message: Message, state: FSMContext):
 
     # Переход к следующему гостю или завершение сбора данных
     if current_guest == data.get("guest_count"):
-        await message.answer(MSG_ENTER_OFFICE_NUMBER)
+        await send_localized_message(
+            message,
+            l10n,
+            "msg_enter_office_number",  # Ключ для локализованного текста регистрации
+        )
         await state.set_state(RegGuest.office_number)
     else:
         await state.update_data(current_guest=current_guest + 1)
-        await message.answer(
-            MSG_ENTER_GUEST_DATA.format(current_guest + 1, MSG_ENTER_GUEST_NAME)
+        guest_data_text = l10n.format_value("msg_enter_guest_data")
+        guest_data_text += (
+            f"{current_guest + 1} - {l10n.format_value("msg_enter_guest_name")}"
         )
+        await message.answer(guest_data_text)
         await state.set_state(RegGuest.guest_name)
 
 
+# @guest_router.message(RegGuest.office_number)
+# async def set_office_number(message: Message, state: FSMContext):
+#     if not message.text.isdigit():
+#         # await message.answer(MSG_INVALID_OFFICE)
+#         # return
+#         await state.update_data(office_number=0, office_for_msg=message.text)
+#     else:
+#         await state.update_data(office_number=message.text)
+#
+#     # Создаем кастомный календарь для выбора даты
+#     calendar = cl.CustomCalendar()
+#     await message.answer(
+#         MSG_SELECT_VISIT_DATE,
+#         reply_markup=await calendar.generate_calendar(
+#             datetime.now().year, datetime.now().month, "main_menu", locale="ru"
+#         ),
+#     )
+#     await state.set_state(RegGuest.visit_date)
 @guest_router.message(RegGuest.office_number)
-async def set_office_number(message: Message, state: FSMContext):
+async def set_office_number(
+    message: Message, state: FSMContext, l10n: FluentLocalization
+):
     if not message.text.isdigit():
-        # await message.answer(MSG_INVALID_OFFICE)
-        # return
         await state.update_data(office_number=0, office_for_msg=message.text)
     else:
         await state.update_data(office_number=message.text)
 
     # Создаем кастомный календарь для выбора даты
     calendar = cl.CustomCalendar()
+    locale = message.from_user.language_code
+    if locale not in ["en", "ru"]:
+        locale = "en"
     await message.answer(
-        MSG_SELECT_VISIT_DATE,
+        l10n.format_value("msg_select_visit_date"),
         reply_markup=await calendar.generate_calendar(
-            datetime.now().year, datetime.now().month, "main_menu", locale="ru"
+            datetime.now().year, datetime.now().month, "main_menu", locale=locale
         ),
     )
     await state.set_state(RegGuest.visit_date)
 
 
+# @guest_router.callback_query(F.data.startswith("calendar:"), RegGuest.visit_date)
+# async def set_visit_date(callback: CallbackQuery, state: FSMContext):
+#     calendar = cl.CustomCalendar()
+#     selected_date = await calendar.handle_callback(callback, "main_menu", locale="ru")
+#
+#     if selected_date:
+#         await state.update_data(visit_date=selected_date.strftime("%d.%m.%Y"))
+#         data = await state.get_data()
+#
+#         user_id = callback.from_user.id
+#         guests = data.get("guests")
+#         office_number = data.get("office_number")
+#         office_for_msg = data.get("office_for_msg")
+#         visit_date = data.get("visit_date")
+#
+#         user = await get_user_by_tg_id(user_id)
+#
+#         # Сохраняем каждого гостя в базу данных
+#         try:
+#             for guest in guests:
+#                 await create_guest(
+#                     user_id, guest["name"], guest["phone"], office_number, visit_date
+#                 )
+#         except Exception as e:
+#             print(e)
+#             await callback.answer(MSG_ERROR_SAVING_GUEST, show_alert=True)
+#             return
+#         if int(office_number) == 0:
+#             office_text = office_for_msg
+#         else:
+#             office_text = f"офис # {office_number}"
+#         # Формируем сообщение для администраторов
+#         if len(guests) == 1:
+#             guest_text = (
+#                 f"👁️‍👥 Гости \n\nРезидент <b>{user.name}</b> (@{user.tg_username}) сообщает:\n"
+#                 # f"Придет <i>гость</i> в офис {office_for_msg}.\n"
+#                 f"Придет <i>гость</i> в {office_text}.\n"
+#                 f"<b>Данные гостя:</b>\n"
+#                 f"<b>├ Дата :</b> {visit_date}\n"
+#                 f"<b>├ ФИО :</b> {guests[0]['name']}\n"
+#                 f"<b>└ Телефон :</b> {guests[0]['phone']}"
+#             )
+#         else:
+#             guest_text = (
+#                 f"👁️‍👥 Гости \n\nРезидент <b>{user.name}</b> (@{user.tg_username}) сообщает:\n"
+#                 # f"Придут <i>{len(guests)} гостя</i> в офис {office_for_msg}.\n"
+#                 f"Придут <i>{len(guests)} гостя</i> в {office_text}.\n"
+#                 f"<b>Данные гостей:</b>\n"
+#             )
+#             for i, guest in enumerate(guests, 1):
+#                 guest_text += (
+#                     f"<b>Гость #{i}:</b>\n"
+#                     f"├ ФИО: {guest['name']}\n"
+#                     f"└ Телефон: {guest['phone']}\n\n"
+#                 )
+#
+#         # Отправляем сообщение администраторам
+#         try:
+#             for admin in BOT_ADMINS:
+#                 await callback.bot.send_message(admin, guest_text, parse_mode="HTML")
+#         except Exception as e:
+#             print(e)
+#             await callback.answer(MSG_ERROR_SENDING_REQUEST, show_alert=True)
+#             return
+#
+#         await callback.message.edit_text(
+#             MSG_ALL_GUESTS_REGISTERED, reply_markup=await kb.user_main()
+#         )
+#         await state.clear()
+#     else:
+#         # Если выбран не день, а навигация, просто обновляем календарь
+#         await callback.message.edit_reply_markup(reply_markup=selected_date)
 @guest_router.callback_query(F.data.startswith("calendar:"), RegGuest.visit_date)
-async def set_visit_date(callback: CallbackQuery, state: FSMContext):
+async def set_visit_date(
+    callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization
+):
     calendar = cl.CustomCalendar()
-    selected_date = await calendar.handle_callback(callback, "main_menu", locale="ru")
+    locale = callback.from_user.language_code
+    if locale not in ["en", "ru"]:
+        locale = "en"
+    selected_date = await calendar.handle_callback(callback, "main_menu", locale=locale)
 
     if selected_date:
         await state.update_data(visit_date=selected_date.strftime("%d.%m.%Y"))
@@ -297,19 +484,22 @@ async def set_visit_date(callback: CallbackQuery, state: FSMContext):
                 await create_guest(
                     user_id, guest["name"], guest["phone"], office_number, visit_date
                 )
-        except Exception as e:
-            print(e)
-            await callback.answer(MSG_ERROR_SAVING_GUEST, show_alert=True)
+        except Exception:
+            await send_localized_message(
+                callback,
+                l10n,
+                "msg_error_saving_guest",  # Ключ для локализованного текста регистрации
+                show_alert=True,
+            )
             return
         if int(office_number) == 0:
             office_text = office_for_msg
         else:
-            office_text = f"офис # {office_number}"
+            office_text = f"{l10n.format_value('msg_office')} # {office_number}"
         # Формируем сообщение для администраторов
         if len(guests) == 1:
             guest_text = (
                 f"👁️‍👥 Гости \n\nРезидент <b>{user.name}</b> (@{user.tg_username}) сообщает:\n"
-                # f"Придет <i>гость</i> в офис {office_for_msg}.\n"
                 f"Придет <i>гость</i> в {office_text}.\n"
                 f"<b>Данные гостя:</b>\n"
                 f"<b>├ Дата :</b> {visit_date}\n"
@@ -319,7 +509,6 @@ async def set_visit_date(callback: CallbackQuery, state: FSMContext):
         else:
             guest_text = (
                 f"👁️‍👥 Гости \n\nРезидент <b>{user.name}</b> (@{user.tg_username}) сообщает:\n"
-                # f"Придут <i>{len(guests)} гостя</i> в офис {office_for_msg}.\n"
                 f"Придут <i>{len(guests)} гостя</i> в {office_text}.\n"
                 f"<b>Данные гостей:</b>\n"
             )
@@ -334,13 +523,20 @@ async def set_visit_date(callback: CallbackQuery, state: FSMContext):
         try:
             for admin in BOT_ADMINS:
                 await callback.bot.send_message(admin, guest_text, parse_mode="HTML")
-        except Exception as e:
-            print(e)
-            await callback.answer(MSG_ERROR_SENDING_REQUEST, show_alert=True)
+        except Exception:
+            await send_localized_message(
+                callback,
+                l10n,
+                "msg_error_sending_request",  # Ключ для локализованного текста регистрации
+                show_alert=True,
+            )
             return
-
-        await callback.message.edit_text(
-            MSG_ALL_GUESTS_REGISTERED, reply_markup=await kb.user_main()
+        await send_localized_message(
+            callback,
+            l10n,
+            "msg_all_guests_registered",  # Ключ для локализованного текста регистрации
+            # reply_markup=await kb.user_main(l10n),
+            reply_markup=await kb.user_main(),
         )
         await state.clear()
     else:

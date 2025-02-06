@@ -228,10 +228,14 @@
 import logging
 import traceback
 from aiogram import Router, Bot
+from aiogram.fsm.context import FSMContext
 from aiogram.handlers import ErrorHandler
 from aiogram.types import Update, InlineKeyboardMarkup, InlineKeyboardButton
+from fluent.runtime import FluentLocalization
+
 from config import BOT_OWNERS, ADMIN_URL
 import app.general_keyboards as kb
+from tools.fluent_loader import get_fluent_localization
 
 error_router = Router()
 
@@ -240,7 +244,6 @@ error_router = Router()
 class MyHandler(ErrorHandler):
     async def handle(self) -> None:
         """Обработчик ошибок в боте"""
-
         # Извлекаем имя и сообщение исключения
         exception_name = type(self.event.exception).__name__
         exception_message = str(self.event.exception)
@@ -277,22 +280,29 @@ class MyHandler(ErrorHandler):
             error_location.replace("\n", " | "),
             traceback_snippet,
         )
-
-        # 🔹 Создаем кнопку "Связаться с Администратором" через ID
-        admin_button = await kb.create_buttons(
-            buttons_data=[("📞 Связаться с Администратором", ADMIN_URL, "url")],
-            main_menu=False,  # Отключаем кнопку "Главное меню"
-        )
+        # # 🔹 Создаем кнопку "Связаться с Администратором" через ID
+        # admin_button = await kb.create_buttons(
+        #     buttons_data=[("📞 Связаться с Администратором", ADMIN_URL, "url")],
+        #     main_menu=False,  # Отключаем кнопку "Главное меню"
+        # )
         # Отправляем сообщение пользователю
         try:
             update: Update = self.event.update
-            user_message = (
-                "⚠️ Произошла ошибка!\n\n"
-                "Пожалуйста, сделайте скриншот этого сообщения и отправьте его администратору, "
-                "описав, что вы делали перед ошибкой.\n\n"
-                "Спасибо за помощь в улучшении бота! 😊"
+            l10n = get_fluent_localization(update.message.from_user.language_code)
+            # 🔹 Создаем кнопку "Связаться с Администратором" через ID
+            admin_button = await kb.create_buttons(
+                buttons_data=[
+                    (l10n.format_value("contact_admin_button"), ADMIN_URL, "url")
+                ],
+                main_menu=False,  # Отключаем кнопку "Главное меню"
             )
-
+            # user_message = (
+            #     "⚠️ Произошла ошибка!\n\n"
+            #     "Пожалуйста, сделайте скриншот этого сообщения и отправьте его администратору, "
+            #     "описав, что вы делали перед ошибкой.\n\n"
+            #     "Спасибо за помощь в улучшении бота! 😊"
+            # )
+            user_message = l10n.format_value("error_text")
             # Проверяем, где есть сообщение, чтобы отправить пользователю
             if update.message:
                 await update.message.answer(user_message, reply_markup=admin_button)
@@ -323,6 +333,7 @@ class MyHandler(ErrorHandler):
                     f"📋 <b>Сообщение:</b> {exception_message}\n\n"
                     f"📍 <b>Местоположение:</b>\n{error_location}\n\n"
                     f"🖥 <b>Traceback:</b>\n<pre>{traceback_snippet}</pre>",
+                    # reply_markup=await kb.create_buttons(l10n),
                     reply_markup=await kb.create_buttons(),
                 )
         except Exception as e:

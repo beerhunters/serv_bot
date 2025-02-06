@@ -189,12 +189,19 @@ async def set_photo(message: Message, state: FSMContext, l10n: FluentLocalizatio
         # reply_markup=await kb.user_main(l10n)
         reply_markup=await kb.user_main(),
     )
+    # ticket_text = (
+    #     f"📬❗️\n{l10n.format_value('user_msg')} {ticket.user.tg_username} {l10n.format_value('create_msg')} <code>#{ticket.id}</code>.\n\n"
+    #     f"<b>{l10n.format_value('user_message_msg')}:</b>\n<em>{ticket.description}</em>\n\n"
+    #     f"<b>{l10n.format_value('full_name_msg')}:</b> {ticket.user.name}\n"
+    #     f"<b>{l10n.format_value('contact_phone_msg')}:</b> {ticket.user.contact}\n"
+    #     f"<b>{l10n.format_value('location_msg')}:</b> {ticket.location.name}\n"
+    # )
     ticket_text = (
-        f"📬❗️\n{l10n.format_value('user_msg')} {ticket.user.tg_username} {l10n.format_value('create_msg')} <code>#{ticket.id}</code>.\n\n"
-        f"<b>{l10n.format_value('user_message_msg')}:</b>\n<em>{ticket.description}</em>\n\n"
-        f"<b>{l10n.format_value('full_name_msg')}:</b> {ticket.user.name}\n"
-        f"<b>{l10n.format_value('contact_phone_msg')}:</b> {ticket.user.contact}\n"
-        f"<b>{l10n.format_value('location_msg')}:</b> {ticket.location.name}\n"
+        f"📬❗️\nПользователь {ticket.user.tg_username} создал новую заявку <code>#{ticket.id}</code>.\n\n"
+        f"<b>Сообщение от пользователя:</b>\n <em>{ticket.description}</em>\n\n"
+        f"<b>ФИО:</b> {ticket.user.name}\n"
+        f"<b>Телефон для связи:</b> {ticket.user.contact}\n"
+        f"<b>Расположение:</b> {ticket.location.name}\n"
     )
     await state.clear()
     for admin in BOT_ADMINS:
