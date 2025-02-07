@@ -6,6 +6,7 @@ from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import CallbackQuery, Message
+from fluent.runtime import FluentLocalization
 from yookassa import Payment
 
 import app.user_kb.keyboards as kb
@@ -29,6 +30,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from config import BOT_ADMINS
 from filters import IsUserFilter
+from tools.tools import send_localized_message
 
 executor = ThreadPoolExecutor(max_workers=5)  # Определяем пул потоков
 
@@ -46,52 +48,136 @@ class BookingTariff(StatesGroup):
     status_payment = State()
 
 
+# @booking_router.callback_query(F.data == "booking")
+# async def show_tariffs(callback: CallbackQuery, state: FSMContext):
+#     await state.set_state(BookingTariff.tariff)
+#     await callback.message.edit_text(
+#         "Выберите тариф:", reply_markup=await kb.tariffs(callback.from_user.id)
+#     )
 @booking_router.callback_query(F.data == "booking")
-async def show_tariffs(callback: CallbackQuery, state: FSMContext):
+async def show_tariffs(
+    callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization
+):
     await state.set_state(BookingTariff.tariff)
-    await callback.message.edit_text(
-        "Выберите тариф:", reply_markup=await kb.tariffs(callback.from_user.id)
+    await send_localized_message(
+        callback,
+        l10n,
+        "select_tariff",  # Ключ для локализованного текста регистрации
+        # reply_markup=await kb.tariffs(callback.from_user.id, l10n)
+        reply_markup=await kb.tariffs(callback.from_user.id),
     )
 
 
+# @booking_router.callback_query(F.data.startswith("tariff_"), BookingTariff.tariff)
+# async def set_tariff(callback: CallbackQuery, state: FSMContext):
+#     # print(callback.data)
+#     await callback.answer("Выбор сделан.")
+#     await state.update_data(tariff=callback.data.split("_")[1])
+#     tariff = await get_tariff_by_id(callback.data.split("_")[1])
+#     description_text = tariff.description
+#     calendar = cl.CustomCalendar()
+#     await callback.message.edit_text(
+#         f"{description_text}\n\n" "Выберите дату:",
+#         reply_markup=await calendar.generate_calendar(
+#             datetime.now().year, datetime.now().month, "main_menu", locale="ru"
+#         ),
+#     )
+#     await state.set_state(BookingTariff.date)
 @booking_router.callback_query(F.data.startswith("tariff_"), BookingTariff.tariff)
-async def set_tariff(callback: CallbackQuery, state: FSMContext):
-    # print(callback.data)
-    await callback.answer("Выбор сделан.")
+async def set_tariff(
+    callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization
+):
+    await send_localized_message(
+        callback,
+        l10n,
+        "choice_made",  # Ключ для локализованного текста регистрации
+        show_alert=True,
+    )
     await state.update_data(tariff=callback.data.split("_")[1])
     tariff = await get_tariff_by_id(callback.data.split("_")[1])
     description_text = tariff.description
     calendar = cl.CustomCalendar()
+    locale = callback.from_user.language_code
+    if locale not in ["en", "ru"]:
+        locale = "en"
     await callback.message.edit_text(
-        f"{description_text}\n\n" "Выберите дату:",
+        f"{description_text}\n\n" f"{l10n.format_value('select_date')}\n",
         reply_markup=await calendar.generate_calendar(
-            datetime.now().year, datetime.now().month, "main_menu", locale="ru"
+            datetime.now().year, datetime.now().month, "main_menu", locale=locale
         ),
     )
     await state.set_state(BookingTariff.date)
 
 
+# @booking_router.callback_query(F.data.startswith("calendar:"), BookingTariff.date)
+# async def set_date(callback: CallbackQuery, state: FSMContext):
+#     calendar = cl.CustomCalendar()
+#     selected_date = await calendar.handle_callback(callback, "main_menu", locale="ru")
+#
+#     if selected_date:
+#         # await state.update_data(visit_date=selected_date.strftime("%d.%m.%Y"))
+#         await state.update_data(visit_date=selected_date)
+#         await callback.message.edit_text(
+#             "Если у вас есть промокод, введите его сейчас. Если нет, просто нажмите /skip_promo."
+#         )
+#         await state.set_state(BookingTariff.promocode)
 @booking_router.callback_query(F.data.startswith("calendar:"), BookingTariff.date)
-async def set_date(callback: CallbackQuery, state: FSMContext):
+async def set_date(
+    callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization
+):
     calendar = cl.CustomCalendar()
-    selected_date = await calendar.handle_callback(callback, "main_menu", locale="ru")
+    locale = callback.from_user.language_code
+    if locale not in ["en", "ru"]:
+        locale = "en"
+    selected_date = await calendar.handle_callback(callback, "main_menu", locale=locale)
 
     if selected_date:
         # await state.update_data(visit_date=selected_date.strftime("%d.%m.%Y"))
         await state.update_data(visit_date=selected_date)
-        await callback.message.edit_text(
-            "Если у вас есть промокод, введите его сейчас. Если нет, просто нажмите /skip_promo."
+        await send_localized_message(
+            callback,
+            l10n,
+            "enter_promo",  # Ключ для локализованного текста регистрации
         )
         await state.set_state(BookingTariff.promocode)
 
 
+# @booking_router.message(BookingTariff.promocode)
+# async def set_promocode(message: Message, state: FSMContext):
+#     if message.text == "/skip_promo":
+#         await state.update_data(discount=0, promocode_id=None)
+#         # Продолжить обработку без промокода
+#         # await message.answer("Промокод пропущен. Давайте продолжим.")
+#         promocode_text = "Промокод пропущен."
+#         await state.set_state(BookingTariff.payment)
+#         await get_payment(message, promocode_text, state)
+#         return
+#     # Получаем введённый промокод
+#     entered_promocode = message.text.strip()
+#     # Проверяем промокод
+#     promocode_discount, promocode_id = await check_promocode(entered_promocode)
+#     if promocode_discount is not None:
+#         await state.update_data(
+#             discount=promocode_discount,
+#             promocode_id=promocode_id,
+#             promocode_name=entered_promocode,
+#         )
+#         # await message.answer(f"Промокод принят! Вы получите скидку в {promocode_discount}%!")
+#         promocode_text = f"Промокод принят! Вы получили скидку {promocode_discount}%!"
+#         await state.set_state(BookingTariff.payment)
+#         await get_payment(message, promocode_text, state)
+#     else:
+#         # Предлагаем пользователю пропустить или попробовать ввести промокод еще раз
+#         await message.answer(
+#             "Промокод не активен или истек. "
+#             "Вы можете попробовать ввести другой промокод или пропустить, нажав /skip_promo."
+#         )
 @booking_router.message(BookingTariff.promocode)
-async def set_promocode(message: Message, state: FSMContext):
+async def set_promocode(message: Message, state: FSMContext, l10n: FluentLocalization):
     if message.text == "/skip_promo":
         await state.update_data(discount=0, promocode_id=None)
         # Продолжить обработку без промокода
-        # await message.answer("Промокод пропущен. Давайте продолжим.")
-        promocode_text = "Промокод пропущен."
+        promocode_text = l10n.format_value("promo_skipped")
         await state.set_state(BookingTariff.payment)
         await get_payment(message, promocode_text, state)
         return
@@ -105,50 +191,140 @@ async def set_promocode(message: Message, state: FSMContext):
             promocode_id=promocode_id,
             promocode_name=entered_promocode,
         )
-        # await message.answer(f"Промокод принят! Вы получите скидку в {promocode_discount}%!")
-        promocode_text = f"Промокод принят! Вы получили скидку {promocode_discount}%!"
+        promocode_text = f"{l10n.format_value("promo_accepted")} {promocode_discount}%!"
         await state.set_state(BookingTariff.payment)
-        await get_payment(message, promocode_text, state)
+        await get_payment(message, promocode_text, state, l10n)
     else:
         # Предлагаем пользователю пропустить или попробовать ввести промокод еще раз
-        await message.answer(
-            "Промокод не активен или истек. "
-            "Вы можете попробовать ввести другой промокод или пропустить, нажав /skip_promo."
+        await send_localized_message(
+            message,
+            l10n,
+            "promo_not_active",  # Ключ для локализованного текста регистрации
         )
 
 
+# @booking_router.message(BookingTariff.payment)
+# async def get_payment(message: Message, promocode_text: str, state: FSMContext):
+#     data = await state.get_data()
+#     user_tg_id = message.from_user.id
+#     visit_date = data.get("visit_date")
+#     tariff_id = data.get("tariff")
+#     discount = data.get("discount", 0)
+#     promocode_id = data.get("promocode_id")
+#     # promocode_name = data.get("promocode_name")
+#
+#     # Получаем тариф для расчета суммы
+#     tariff = await get_tariff_by_id(tariff_id)
+#     amount_wo_discount = tariff.price
+#     amount_w_discount = amount_wo_discount * (1 - (discount / 100))
+#
+#     await state.update_data(amount_w_discount=amount_w_discount)
+#
+#     # first_line = tariff.description.split('\n')[0]
+#     # formatted_description = f"{first_line}({visit_date}) за {amount_w_discount} рублей"
+#     formatted_visit_date = visit_date.strftime("%d.%m.%Y")
+#     formatted_description = (
+#         f"{tariff.name}({formatted_visit_date}) за {amount_w_discount} рублей"
+#     )
+#
+#     # reservation = await create_reservation(
+#     #     user_id=user_id,
+#     #     visit_date=visit_date,
+#     #     tariff_name=tariff.name,
+#     #     amount_wo_discount=amount_wo_discount,
+#     #     amount_w_discount=amount_w_discount,
+#     #     promocode_name=promocode_name,
+#     # )
+#     booking = await create_booking(
+#         user_tg_id=user_tg_id,
+#         visit_date=visit_date,
+#         tariff_id=tariff_id,
+#         amount_wo_discount=amount_wo_discount,
+#         amount_w_discount=amount_w_discount,
+#         promocode_id=promocode_id,
+#     )
+#
+#     if amount_w_discount == 0:
+#         await state.update_data(payment_status="succeeded")
+#         await message.answer(
+#             f"{promocode_text}\n\n"
+#             f"Бронь успешно подтверждена! Ждём вас в назначенный день.",
+#             reply_markup=await kb.user_main(),
+#         )
+#         # await update_reservation_fields(reservation_id=reservation.id, paid=True, rubitime_id=rubitime_id)
+#         await increment_user_successful_bookings(
+#             message.from_user.id,
+#         )
+#         await increase_usage_of_promocodes(promocode_id)
+#
+#         booking_text, rubitime_id = await generate_booking_message(message, state)
+#         # await update_reservation_fields(
+#         #     reservation_id=reservation.id, paid=True, rubitime_id=rubitime_id
+#         # )
+#         await update_booking_fields(
+#             booking_id=booking.id, paid=True, confirmed=True, rubitime_id=rubitime_id
+#         )
+#         for admin in BOT_ADMINS:
+#             await message.bot.send_message(
+#                 admin,
+#                 booking_text,
+#                 parse_mode="HTML",
+#                 reply_markup=await admin_kb.create_buttons(),
+#             )
+#
+#         await state.clear()
+#         return
+#     else:
+#
+#         payment_id, confirmation_url = await create_payment(
+#             formatted_description, amount=amount_w_discount
+#         )
+#         # await update_reservation_fields(
+#         #     reservation_id=reservation.id, payment_id=payment_id
+#         # )
+#         await update_booking_fields(booking_id=booking.id, payment_id=payment_id)
+#         # Сохраняем ID бронирования в FSM
+#         await state.update_data(booking_id=booking.id, payment_id=payment_id)
+#         try:
+#             # Отправляем сообщение о платеже и сохраняем его объект
+#             payment_message = await message.answer(
+#                 text=f"{promocode_text}\n\n{tariff.description}",
+#                 reply_markup=await kb.payment(
+#                     confirmation_url, amount=amount_w_discount
+#                 ),
+#             )
+#             # Сохраняем объект сообщения в состоянии
+#             await state.update_data(payment_message_id=payment_message.message_id)
+#             await state.set_state(BookingTariff.status_payment)
+#             # print(payment_message)
+#
+#             # Начинаем процесс проверки статуса платежа
+#             await asyncio.create_task(
+#                 poll_payment_status(message, promocode_text, state)
+#             )
+#         except Exception as e:
+#             await message.answer(
+#                 "Произошла ошибка при создании платежа. Попробуйте позже."
+#             )
 @booking_router.message(BookingTariff.payment)
-async def get_payment(message: Message, promocode_text: str, state: FSMContext):
+async def get_payment(
+    message: Message, promocode_text: str, state: FSMContext, l10n: FluentLocalization
+):
     data = await state.get_data()
     user_tg_id = message.from_user.id
     visit_date = data.get("visit_date")
     tariff_id = data.get("tariff")
     discount = data.get("discount", 0)
     promocode_id = data.get("promocode_id")
-    # promocode_name = data.get("promocode_name")
-
     # Получаем тариф для расчета суммы
     tariff = await get_tariff_by_id(tariff_id)
     amount_wo_discount = tariff.price
     amount_w_discount = amount_wo_discount * (1 - (discount / 100))
-
     await state.update_data(amount_w_discount=amount_w_discount)
-
-    # first_line = tariff.description.split('\n')[0]
-    # formatted_description = f"{first_line}({visit_date}) за {amount_w_discount} рублей"
     formatted_visit_date = visit_date.strftime("%d.%m.%Y")
     formatted_description = (
         f"{tariff.name}({formatted_visit_date}) за {amount_w_discount} рублей"
     )
-
-    # reservation = await create_reservation(
-    #     user_id=user_id,
-    #     visit_date=visit_date,
-    #     tariff_name=tariff.name,
-    #     amount_wo_discount=amount_wo_discount,
-    #     amount_w_discount=amount_w_discount,
-    #     promocode_name=promocode_name,
-    # )
     booking = await create_booking(
         user_tg_id=user_tg_id,
         visit_date=visit_date,
@@ -157,24 +333,19 @@ async def get_payment(message: Message, promocode_text: str, state: FSMContext):
         amount_w_discount=amount_w_discount,
         promocode_id=promocode_id,
     )
-
     if amount_w_discount == 0:
         await state.update_data(payment_status="succeeded")
         await message.answer(
             f"{promocode_text}\n\n"
-            f"Бронь успешно подтверждена! Ждём вас в назначенный день.",
+            f"{l10n.format_value('reservation_successfully_confirmed')}",
+            # reply_markup=await kb.user_main(l10n),
             reply_markup=await kb.user_main(),
         )
-        # await update_reservation_fields(reservation_id=reservation.id, paid=True, rubitime_id=rubitime_id)
         await increment_user_successful_bookings(
             message.from_user.id,
         )
         await increase_usage_of_promocodes(promocode_id)
-
         booking_text, rubitime_id = await generate_booking_message(message, state)
-        # await update_reservation_fields(
-        #     reservation_id=reservation.id, paid=True, rubitime_id=rubitime_id
-        # )
         await update_booking_fields(
             booking_id=booking.id, paid=True, confirmed=True, rubitime_id=rubitime_id
         )
@@ -183,19 +354,15 @@ async def get_payment(message: Message, promocode_text: str, state: FSMContext):
                 admin,
                 booking_text,
                 parse_mode="HTML",
+                # reply_markup=await admin_kb.create_buttons(l10n),
                 reply_markup=await admin_kb.create_buttons(),
             )
-
         await state.clear()
         return
     else:
-
         payment_id, confirmation_url = await create_payment(
             formatted_description, amount=amount_w_discount
         )
-        # await update_reservation_fields(
-        #     reservation_id=reservation.id, payment_id=payment_id
-        # )
         await update_booking_fields(booking_id=booking.id, payment_id=payment_id)
         # Сохраняем ID бронирования в FSM
         await state.update_data(booking_id=booking.id, payment_id=payment_id)
@@ -210,15 +377,16 @@ async def get_payment(message: Message, promocode_text: str, state: FSMContext):
             # Сохраняем объект сообщения в состоянии
             await state.update_data(payment_message_id=payment_message.message_id)
             await state.set_state(BookingTariff.status_payment)
-            # print(payment_message)
 
             # Начинаем процесс проверки статуса платежа
             await asyncio.create_task(
                 poll_payment_status(message, promocode_text, state)
             )
-        except Exception as e:
-            await message.answer(
-                "Произошла ошибка при создании платежа. Попробуйте позже."
+        except Exception:
+            await send_localized_message(
+                message,
+                l10n,
+                "error",  # Ключ для локализованного текста регистрации
             )
 
 
@@ -228,43 +396,80 @@ async def check_payment_status(payment_id: str) -> bool:
         # Запускаем синхронный метод в пуле потоков
         payment = await loop.run_in_executor(executor, Payment.find_one, payment_id)
         return payment.status == "succeeded"
-    except Exception as e:
+    except Exception:
         return False
 
 
-async def poll_payment_status(message: Message, promocode_text: str, state: FSMContext):
-    # print(promocode_text)
+# async def poll_payment_status(message: Message, promocode_text: str, state: FSMContext):
+#     delay = 5
+#     data = await state.get_data()
+#     booking_id = data.get("booking_id")
+#     payment_id = data.get("payment_id")
+#     payment_message_id = data.get("payment_message_id")
+#     promocode_id = data.get("promocode_id")
+#     while True:
+#         payment_status = (await state.get_data()).get("payment_status")
+#         if payment_status == "cancelled":
+#             await state.clear()
+#             break
+#         if await check_payment_status(payment_id):
+#             await message.bot.edit_message_text(
+#                 text=f"{promocode_text}\n\nБронь успешно подтверждена! Ждём вас в назначенный день.",
+#                 chat_id=message.chat.id,
+#                 message_id=payment_message_id,
+#                 reply_markup=await kb.user_main(),
+#             )
+#             await increment_user_successful_bookings(
+#                 message.from_user.id,
+#             )
+#             await increase_usage_of_promocodes(promocode_id)
+#             booking_text, rubitime_id = await generate_booking_message(message, state)
+#             await update_booking_fields(
+#                 booking_id=booking_id,
+#                 paid=True,
+#                 confirmed=True,
+#                 rubitime_id=rubitime_id,
+#             )
+#             for admin in BOT_ADMINS:
+#                 await message.bot.send_message(
+#                     admin,
+#                     booking_text,
+#                     parse_mode="HTML",
+#                     # reply_markup=await admin_kb.back_button("main_menu"),
+#                     reply_markup=await admin_kb.create_buttons(),
+#                 )
+#
+#             await state.clear()
+#             break
+#
+#         await asyncio.sleep(delay)
+async def poll_payment_status(
+    message: Message, promocode_text: str, state: FSMContext, l10n: FluentLocalization
+):
     delay = 5
     data = await state.get_data()
     booking_id = data.get("booking_id")
     payment_id = data.get("payment_id")
     payment_message_id = data.get("payment_message_id")
     promocode_id = data.get("promocode_id")
-    # print("payment_id", payment_id)
     while True:
         payment_status = (await state.get_data()).get("payment_status")
-        # print("payment_status", payment_status)
         if payment_status == "cancelled":
             await state.clear()
             break
         if await check_payment_status(payment_id):
             await message.bot.edit_message_text(
-                text=f"{promocode_text}\n\nБронь успешно подтверждена! Ждём вас в назначенный день.",
+                text=f"{promocode_text}\n\n{l10n.format_value('reservation_successfully_confirmed')}",
                 chat_id=message.chat.id,
                 message_id=payment_message_id,
+                # reply_markup=await kb.user_main(l10n),
                 reply_markup=await kb.user_main(),
             )
-            # await update_reservation_fields(reservation_id=reservation_id, paid=True)
-            # await update_fields(Reservation, reservation_id=reservation_id, paid=True)
             await increment_user_successful_bookings(
                 message.from_user.id,
             )
             await increase_usage_of_promocodes(promocode_id)
-
             booking_text, rubitime_id = await generate_booking_message(message, state)
-            # await update_reservation_fields(
-            #     reservation_id=reservation_id, paid=True, rubitime_id=rubitime_id
-            # )
             await update_booking_fields(
                 booking_id=booking_id,
                 paid=True,
@@ -276,13 +481,11 @@ async def poll_payment_status(message: Message, promocode_text: str, state: FSMC
                     admin,
                     booking_text,
                     parse_mode="HTML",
-                    # reply_markup=await admin_kb.back_button("main_menu"),
+                    # reply_markup=await admin_kb.create_buttons(l10n),
                     reply_markup=await admin_kb.create_buttons(),
                 )
-
             await state.clear()
             break
-
         await asyncio.sleep(delay)
 
 
@@ -299,10 +502,8 @@ async def generate_booking_message(
         user_id,
     )
     data = await state.get_data()
-    # reservation_id = data.get("reservation_id")
     visit_date = data.get("visit_date")
     formatted_visit_date = visit_date.strftime("%d.%m.%Y")
-    # rubitime_formatted_visit_date = visit_date.strftime("%Y-%m-%d %H:%M:%S")
     rubitime_formatted_visit_date = visit_date.strftime("%Y-%m-%d") + " 09:00:00"
     tariff_id = data.get("tariff")
     amount = data.get("amount_w_discount")
@@ -332,11 +533,6 @@ async def generate_booking_message(
             "comment": f"Промокод: {promocode_name if promocode_name else '-'}, скидка: {discount if discount else '-'}%",
             "coupon": f"{promocode_name if promocode_name else '-'}",
             "coupon_discount": f"{discount}%",
-            # "duration": duration_hours * 60,
         },
     )
-    # print(reservation_id, rubitime_id)
-    # await update_reservation_fields(
-    #     reservation_id=reservation_id, rubitime_id=rubitime_id
-    # )
     return text, rubitime_id
