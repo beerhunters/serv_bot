@@ -170,19 +170,19 @@ guest_router.message.filter(IsUserFilter(is_user=True))
 guest_router.callback_query.filter(IsUserFilter(is_user=True))
 
 
-# Константы для сообщений
-MSG_ENTER_GUEST_COUNT = "Сколько гостей вы хотите зарегистрировать?\n"
-MSG_ENTER_GUEST_DATA = "Гость #{0}: {1}"
-MSG_ENTER_GUEST_NAME = "Введите ФИО гостя:"
-MSG_ENTER_GUEST_PHONE = "Введите телефон гостя:"
-MSG_ENTER_OFFICE_NUMBER = "Введите номер офиса:"
-MSG_SELECT_VISIT_DATE = "Выберите дату визита гостей:"
-MSG_ALL_GUESTS_REGISTERED = "Все гости успешно зарегистрированы!"
-MSG_ERROR_SENDING_REQUEST = "Ошибка при отправке запроса."
-MSG_ERROR_SAVING_GUEST = "Ошибка при сохранении данных гостя."
-MSG_INVALID_GUEST_COUNT = "Введите корректное количество гостей (число > 0)."
-MSG_INVALID_PHONE = "Введите корректный номер телефона."
-MSG_INVALID_OFFICE = "Введите корректный номер офиса."
+# # Константы для сообщений
+# MSG_ENTER_GUEST_COUNT = "Сколько гостей вы хотите зарегистрировать?\n"
+# MSG_ENTER_GUEST_DATA = "Гость #{0}: {1}"
+# MSG_ENTER_GUEST_NAME = "Введите ФИО гостя:"
+# MSG_ENTER_GUEST_PHONE = "Введите телефон гостя:"
+# MSG_ENTER_OFFICE_NUMBER = "Введите номер офиса:"
+# MSG_SELECT_VISIT_DATE = "Выберите дату визита гостей:"
+# MSG_ALL_GUESTS_REGISTERED = "Все гости успешно зарегистрированы!"
+# MSG_ERROR_SENDING_REQUEST = "Ошибка при отправке запроса."
+# MSG_ERROR_SAVING_GUEST = "Ошибка при сохранении данных гостя."
+# MSG_INVALID_GUEST_COUNT = "Введите корректное количество гостей (число > 0)."
+# MSG_INVALID_PHONE = "Введите корректный номер телефона."
+# MSG_INVALID_OFFICE = "Введите корректный номер офиса."
 
 
 class RegGuest(StatesGroup):
