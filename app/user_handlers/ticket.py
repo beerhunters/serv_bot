@@ -300,11 +300,11 @@ async def all_tickets(callback: CallbackQuery, l10n: FluentLocalization):
         for ticket in current_page_tickets:
             text += (
                 f"{'✅' if ticket.state else '⁉️'}\n"
-                f"<b>├ {l10n.format_value("h_ticket")}</b> <code>#{ticket.id}</code>\n"
-                f"<b>├ {l10n.format_value("h_description")}</b> {ticket.description}\n"
-                f"<b>├ {l10n.format_value("h_date")} </b>{ticket.reg_time}\n"
-                f"<b>├ {l10n.format_value("h_comment")} </b>{ticket.ticket_comm if ticket.ticket_comm else '-'}\n"
-                f"<b>└ {l10n.format_value("h_status")}</b> {l10n.format_value("h_completed") if ticket.state else l10n.format_value("h_execute")}\n\n"
+                f"<b>├ {l10n.format_value('h_ticket')}</b> <code>#{ticket.id}</code>\n"
+                f"<b>├ {l10n.format_value('h_description')}</b> {ticket.description}\n"
+                f"<b>├ {l10n.format_value('h_date')} </b>{ticket.reg_time}\n"
+                f"<b>├ {l10n.format_value('h_comment')} </b>{ticket.ticket_comm if ticket.ticket_comm else '-'}\n"
+                f"<b>└ {l10n.format_value('h_status')}</b> {l10n.format_value('h_completed') if ticket.state else l10n.format_value('h_execute')}\n\n"
             )
         keyboard = await kb.tickets(
             "my_ticket_page_",

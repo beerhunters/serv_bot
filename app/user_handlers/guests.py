@@ -238,7 +238,7 @@ async def set_guest_count(
     await state.update_data(guest_count=guest_count, current_guest=1, guests=[])
     current_guest = 1
     guest_data_text = l10n.format_value("msg_enter_guest_data")
-    guest_data_text += f"{current_guest} - {l10n.format_value("msg_enter_guest_name")}"
+    guest_data_text += f"{current_guest} - {l10n.format_value('msg_enter_guest_name')}"
     # Начинаем ввод данных для гостей
     await message.answer(guest_data_text)
     await state.set_state(RegGuest.guest_name)
@@ -337,7 +337,7 @@ async def set_guest_phone(
         await state.update_data(current_guest=current_guest + 1)
         guest_data_text = l10n.format_value("msg_enter_guest_data")
         guest_data_text += (
-            f"{current_guest + 1} - {l10n.format_value("msg_enter_guest_name")}"
+            f"{current_guest + 1} - {l10n.format_value('msg_enter_guest_name')}"
         )
         await message.answer(guest_data_text)
         await state.set_state(RegGuest.guest_name)
