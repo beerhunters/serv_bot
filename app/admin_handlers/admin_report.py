@@ -6,6 +6,7 @@ from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import CallbackQuery, FSInputFile
+from fluent.runtime import FluentLocalization
 
 import app.admin_kb.keyboards as kb
 import app.calendar_keyboard.custom_month_cal as cl_month
@@ -41,19 +42,23 @@ class Report(StatesGroup):
 
 
 @admin_report_router.callback_query(F.data == "admin_report")
-async def report_menu(callback: CallbackQuery, state: FSMContext):
+async def report_menu(
+    callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization
+):
     # await callback.answer("Функция в разработке", show_alert=True)
     await state.clear()
     await callback.message.edit_text(
         "Выберите отчет, который необходимо получить: ",
-        reply_markup=await kb.report_options(),
+        reply_markup=await kb.report_options(l10n=l10n),
     )
     await state.set_state(Report.report)
     await callback.answer()
 
 
 @admin_report_router.callback_query(F.data.startswith("report_"), Report.report)
-async def select_report(callback: CallbackQuery, state: FSMContext):
+async def select_report(
+    callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization
+):
     report_name = callback.data.split("_")[1]
     await state.update_data(report_name=report_name)
     calendar = cl_month.CustomMonthCalendar()
@@ -68,7 +73,9 @@ async def select_report(callback: CallbackQuery, state: FSMContext):
 
 
 @admin_report_router.callback_query(F.data.startswith("calendar:"), Report.period)
-async def set_period(callback: CallbackQuery, state: FSMContext):
+async def set_period(
+    callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization
+):
     calendar = cl_month.CustomMonthCalendar()
     result = await calendar.handle_callback(callback, "admin_report", locale="ru")
     if result:
@@ -89,7 +96,7 @@ async def set_period(callback: CallbackQuery, state: FSMContext):
             await state.set_state(Report.report_bookings)
         await callback.message.edit_text(
             f"Вы выбрали период с {first_day} по {last_day}. Хотите создать отчет?",
-            reply_markup=await kb.generate_report_button(),
+            reply_markup=await kb.generate_report_button(l10n=l10n),
         )
 
 
@@ -100,6 +107,7 @@ async def generate_report(
     model,
     list_name: str,
     get_data_func,
+    l10n: FluentLocalization,
 ):
     data = await state.get_data()
     first_day = data["first_day_of_month"]
@@ -123,25 +131,29 @@ async def generate_report(
         await asyncio.sleep(1)
 
         text = "🔝                          🔝                          🔝\n✅ Отчет отправлен"
-        await callback.message.answer(text, reply_markup=await kb.admin_main())
+        await callback.message.answer(text, reply_markup=await kb.admin_main(l10n=l10n))
     else:
         await callback.message.edit_text(
             f"За данный период ничего не найдено\nПопробуйте выбрать другой период",
-            reply_markup=await kb.admin_main(),
+            reply_markup=await kb.admin_main(l10n=l10n),
         )
 
     await state.clear()
 
 
 @admin_report_router.callback_query(F.data == "generate_report", Report.report_tickets)
-async def tickets_report(callback: CallbackQuery, state: FSMContext):
+async def tickets_report(
+    callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization
+):
     await generate_report(
-        callback, state, "tickets", Ticket, "Заявки", get_tickets_for_period
+        callback, state, "tickets", Ticket, "Заявки", get_tickets_for_period, l10n=l10n
     )
 
 
 @admin_report_router.callback_query(F.data == "generate_report", Report.report_bookings)
-async def bookings_report(callback: CallbackQuery, state: FSMContext):
+async def bookings_report(
+    callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization
+):
     # await generate_report(callback, state, "reservations", Reservation, "Бронирование", get_reservation_for_period)
     await generate_report(
         callback,
@@ -151,21 +163,27 @@ async def bookings_report(callback: CallbackQuery, state: FSMContext):
         "Бронирование",
         # get_reservation_for_period,
         get_booking_for_period,
+        l10n=l10n,
     )
 
 
 @admin_report_router.callback_query(F.data == "new_visitors", Report.report)
-async def select_options_nv(callback: CallbackQuery, state: FSMContext):
+async def select_options_nv(
+    callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization
+):
     await state.update_data(report_name="new_visitors")
     await callback.message.edit_text(
-        "Выберите подходящий вариант отчета: ", reply_markup=await kb.period_option()
+        "Выберите подходящий вариант отчета: ",
+        reply_markup=await kb.period_option(l10n=l10n),
     )
     await state.set_state(Report.period_option)
     await callback.answer()
 
 
 @admin_report_router.callback_query(F.data.startswith("period:"), Report.period_option)
-async def select_report(callback: CallbackQuery, state: FSMContext):
+async def select_report(
+    callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization
+):
     period = callback.data.split(":")[1]
     await state.update_data(period=period)
     if period == "day":
@@ -191,7 +209,9 @@ async def select_report(callback: CallbackQuery, state: FSMContext):
 @admin_report_router.callback_query(
     F.data.startswith("calendar:"), Report.period_for_nv
 )
-async def set_period(callback: CallbackQuery, state: FSMContext):
+async def set_period(
+    callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization
+):
     data = await state.get_data()
     period = data["period"]
 
@@ -226,14 +246,16 @@ async def set_period(callback: CallbackQuery, state: FSMContext):
         # Редактируем сообщение
         await callback.message.edit_text(
             f"Вы выбрали период с {first_day} по {last_day}. Хотите создать отчет?",
-            reply_markup=await kb.generate_report_button(),
+            reply_markup=await kb.generate_report_button(l10n=l10n),
         )
 
 
 @admin_report_router.callback_query(
     F.data == "generate_report", Report.report_new_visitors
 )
-async def reservations_report(callback: CallbackQuery, state: FSMContext):
+async def reservations_report(
+    callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization
+):
     await generate_report(
         callback,
         state,
@@ -241,4 +263,5 @@ async def reservations_report(callback: CallbackQuery, state: FSMContext):
         User,
         "Новые пользователи",
         get_new_visitors_for_period,
+        l10n=l10n,
     )

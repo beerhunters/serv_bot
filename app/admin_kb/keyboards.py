@@ -1,4 +1,5 @@
 from aiogram.types import InlineKeyboardMarkup
+from fluent.runtime import FluentLocalization
 
 from app.general_keyboards import create_buttons
 
@@ -166,7 +167,7 @@ from app.general_keyboards import create_buttons
 #         ("❌ Отклонить", f"reject_booking:{booking_id}"),
 #     ]
 #     return await create_buttons(buttons_data)
-async def admin_main() -> InlineKeyboardMarkup:
+async def admin_main(l10n) -> InlineKeyboardMarkup:
     buttons_data = [
         ("👥 Список пользователей", "list_users", "callback"),
         ("🎟️ Все заявки", "all_tasks", "callback"),
@@ -174,82 +175,98 @@ async def admin_main() -> InlineKeyboardMarkup:
         ("📄 Отчеты", "admin_report", "callback"),
         ("❔ Информация", "info_admin", "callback"),
     ]
-    return await create_buttons(buttons_data)
+    return await create_buttons(buttons_data, l10n=l10n, main_menu=False)
 
 
-async def tickets_menu() -> InlineKeyboardMarkup:
+async def tickets_menu(l10n) -> InlineKeyboardMarkup:
     buttons_data = [
         ("🗂️ Список открытых заявок", "open_tickets", "callback"),
         ("⚠️ Все мои заявки", "all_my_tickets", "callback"),
         ("✅ История заявок", "all_history", "callback"),
         ("📷 Заявки с фотографией", "photo_tickets", "callback"),
     ]
-    return await create_buttons(buttons_data)
+    return await create_buttons(buttons_data, l10n=l10n)
 
 
-async def list_of_tickets(tickets) -> InlineKeyboardMarkup:
+async def list_of_tickets(tickets, l10n) -> InlineKeyboardMarkup:
     buttons_data = [
         (f"Заявка #{ticket.id} - {ticket.reg_time}", f"ticket_{ticket.id}", "callback")
         for ticket in tickets
     ]
-    return await create_buttons(buttons_data, back_callback_data="all_tasks")
+    return await create_buttons(buttons_data, back_callback_data="all_tasks", l10n=l10n)
 
 
-async def accept_ticket() -> InlineKeyboardMarkup:
+async def accept_ticket(l10n: FluentLocalization) -> InlineKeyboardMarkup:
     buttons_data = [
         ("➕ Принять заявку", "accept_ticket", "callback"),
     ]
-    return await create_buttons(buttons_data, back_callback_data="open_tickets")
+    return await create_buttons(
+        buttons_data, back_callback_data="open_tickets", l10n=l10n
+    )
 
 
-async def complete_ticket() -> InlineKeyboardMarkup:
+async def complete_ticket(l10n) -> InlineKeyboardMarkup:
     buttons_data = [
         ("☑️ Закрыть задачу сейчас", "complete_ticket", "callback"),
     ]
-    return await create_buttons(buttons_data, back_callback_data="open_tickets")
+    return await create_buttons(
+        buttons_data, back_callback_data="open_tickets", l10n=l10n
+    )
 
 
-async def close_ticket() -> InlineKeyboardMarkup:
+async def close_ticket(l10n) -> InlineKeyboardMarkup:
     buttons_data = [
         ("✅ Завершить задачу", "close_ticket", "callback"),
     ]
-    return await create_buttons(buttons_data, back_callback_data="open_tickets")
+    return await create_buttons(
+        buttons_data, back_callback_data="open_tickets", l10n=l10n
+    )
 
 
-async def report_options() -> InlineKeyboardMarkup:
+async def report_options(l10n) -> InlineKeyboardMarkup:
     buttons_data = [
         ("1. Заявки за месяц", "report_tickets", "callback"),
         ("2. Бронирования за месяц", "report_bookings", "callback"),
         ("3. Новые посетители", "new_visitors", "callback"),
     ]
-    return await create_buttons(buttons_data, back_callback_data="main_menu")
+    return await create_buttons(buttons_data, back_callback_data="main_menu", l10n=l10n)
 
 
-async def period_option() -> InlineKeyboardMarkup:
+async def period_option(l10n) -> InlineKeyboardMarkup:
     buttons_data = [
         ("1. За день", "period:day", "callback"),
         ("2. За месяц", "period:month", "callback"),
     ]
-    return await create_buttons(buttons_data, back_callback_data="admin_report")
+    return await create_buttons(
+        buttons_data, back_callback_data="admin_report", l10n=l10n
+    )
 
 
-async def generate_report_button() -> InlineKeyboardMarkup:
+async def generate_report_button(l10n) -> InlineKeyboardMarkup:
     buttons_data = [
         ("Создать отчет", "generate_report", "callback"),
     ]
-    return await create_buttons(buttons_data, back_callback_data="admin_report")
+    return await create_buttons(
+        buttons_data, back_callback_data="admin_report", l10n=l10n
+    )
 
 
-async def approval(booking_id: int) -> InlineKeyboardMarkup:
+async def approval(booking_id: int, l10n: FluentLocalization) -> InlineKeyboardMarkup:
     buttons_data = [
         ("✅ Подтвердить", f"approve_booking_{booking_id}", "callback"),
         ("❌ Отклонить", f"reject_booking_{booking_id}", "callback"),
     ]
-    return await create_buttons(buttons_data)
+    return await create_buttons(buttons_data, l10n=l10n)
 
 
 async def users(
-    cd_next_prev, cd_back, page: int, users_list: int, page_size: int, end_index: int
+    cd_next_prev,
+    cd_back,
+    page: int,
+    users_list: int,
+    page_size: int,
+    end_index: int,
+    l10n,
 ) -> InlineKeyboardMarkup:
     buttons_data = []
     if users_list > page_size:
@@ -261,7 +278,7 @@ async def users(
             buttons_data.append(
                 ("🔜 Следующая", f"{cd_next_prev}{page + 1}", "callback")
             )
-    return await create_buttons(buttons_data, back_callback_data=cd_back)
+    return await create_buttons(buttons_data, back_callback_data=cd_back, l10n=l10n)
 
 
 # # Список пользователей

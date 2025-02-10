@@ -2,6 +2,7 @@ from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import CallbackQuery, Message
+from fluent.runtime import FluentLocalization
 
 import app.owner_kb.keyboards as kb
 import app.admin_kb.keyboards as kb_admin
@@ -30,34 +31,38 @@ class RequestManagement(StatesGroup):
 
 
 # Функция для определения основной клавиатуры в зависимости от роли
-async def get_main_keyboard(user_id: int):
+async def get_main_keyboard(user_id: int, l10n: FluentLocalization):
     # Проверка владельца
     if user_id in config.BOT_OWNERS:
-        return await kb.owner_main()
+        return await kb.owner_main(l10n=l10n)
     # Проверка администратора (получаем список админов из БД)
     db_admins = await get_admins_from_db()
     db_admin_ids = {admin[1] for admin in db_admins}  # admin[1] — это tg_id
     bot_admins = set(config.BOT_ADMINS).union(db_admin_ids)
     if user_id in bot_admins:
-        return await kb_admin.admin_main()
+        return await kb_admin.admin_main(l10n=l10n)
     # Вернуть None или клавиатуру по умолчанию, если пользователь не владелец и не администратор
     return None
 
 
 @owner_booking_mr_management.callback_query(F.data == "manage_booking")
-async def manage_requests(callback: CallbackQuery, state: FSMContext):
+async def manage_requests(
+    callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization
+):
     # await state.clear()
     # await callback.answer("Функция в разработке", show_alert=True)
     await state.clear()
     await callback.message.edit_text(
-        text="💠 Выберите действие:", reply_markup=await kb.manage_booking()
+        text="💠 Выберите действие:", reply_markup=await kb.manage_booking(l10n=l10n)
     )
     await callback.answer()
 
 
 @owner_booking_mr_management.callback_query(F.data == "list_booking")
 @owner_booking_mr_management.callback_query(F.data.startswith("my_booking_page_"))
-async def list_booking(callback: CallbackQuery, state: FSMContext):
+async def list_booking(
+    callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization
+):
     await state.clear()
     page = 1  # Стартовая страница
 
@@ -72,13 +77,13 @@ async def list_booking(callback: CallbackQuery, state: FSMContext):
     #         print(f"  {attr}: {value}")
     await state.update_data(booking_list=booking_list)
 
-    await display_booking(callback, booking_list, page, "my_booking_page_")
+    await display_booking(callback, booking_list, page, "my_booking_page_", l10n=l10n)
 
 
 @owner_booking_mr_management.message(F.text.startswith("/delete_booking_"))
 @owner_booking_mr_management.callback_query(F.data.startswith("delete_booking_"))
-async def delete_entry(event, state: FSMContext):
-    main_keyboard = await get_main_keyboard(event.from_user.id)
+async def delete_entry(event, state: FSMContext, l10n: FluentLocalization):
+    main_keyboard = await get_main_keyboard(event.from_user.id, l10n=l10n)
     if isinstance(event, CallbackQuery):
         booking_id = event.data.split("_")[2]
         booking = await get_user_id_by_booking(
@@ -114,7 +119,7 @@ async def delete_entry(event, state: FSMContext):
     await event.bot.send_message(
         booking.user_tg_id,
         "К сожалению, выбранное время уже занято.☹️",
-        reply_markup=await user_kb.user_main(),
+        reply_markup=await user_kb.user_main(l10n=l10n),
     )
     if booking.confirmed:
         await rubitime("remove_record", {"id": booking.rubitime_id})
@@ -123,7 +128,9 @@ async def delete_entry(event, state: FSMContext):
     await state.clear()
 
 
-async def display_booking(message_or_callback, booking_list, page, prefix):
+async def display_booking(
+    message_or_callback, booking_list, page, prefix, l10n: FluentLocalization
+):
     page_size = 5  # Размер страницы
     start_index = (page - 1) * page_size
     end_index = start_index + page_size
@@ -179,12 +186,18 @@ async def display_booking(message_or_callback, booking_list, page, prefix):
                 f"{delete_text}"
             )
         keyboard = await kb.booking_list(
-            prefix, "main_menu", page, len(booking_list), page_size, end_index
+            prefix,
+            "main_menu",
+            page,
+            len(booking_list),
+            page_size,
+            end_index,
+            l10n=l10n,
         )
     else:
         # Если список бронирований пуст
         text = "📨 Нет доступных бронирований.. 🤷‍️"
-        keyboard = await get_main_keyboard(message_or_callback.from_user.id)
+        keyboard = await get_main_keyboard(message_or_callback.from_user.id, l10n=l10n)
 
     # Проверяем, сообщение ли это или callback
     if isinstance(message_or_callback, Message):

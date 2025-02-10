@@ -1,6 +1,7 @@
 from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
+from fluent.runtime import FluentLocalization
 
 import app.admin_kb.keyboards as kb
 from app.database.requests import (
@@ -17,7 +18,9 @@ admin_users_router.callback_query.filter(IsAdminFilter(is_admin=True))
 
 @admin_users_router.callback_query(F.data == "list_users")
 @admin_users_router.callback_query(F.data.startswith("my_users_page_"))
-async def list_users(callback: CallbackQuery, state: FSMContext):
+async def list_users(
+    callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization
+):
     # await add_at_symbol_to_usernames()
     await state.clear()
     page = 1  # Стартовая страница
@@ -31,10 +34,12 @@ async def list_users(callback: CallbackQuery, state: FSMContext):
 
     await state.update_data(users=users)
 
-    await display_users(callback, users, page, "my_users_page_")
+    await display_users(callback, users, page, "my_users_page_", l10n=l10n)
 
 
-async def display_users(message_or_callback, users, page, prefix):
+async def display_users(
+    message_or_callback, users, page, prefix, l10n: FluentLocalization
+):
     page_size = 5  # Размер страницы
     start_index = (page - 1) * page_size
     end_index = start_index + page_size
@@ -52,11 +57,11 @@ async def display_users(message_or_callback, users, page, prefix):
                 f" └ <em>🗓️ Посещения: </em>{user.successful_bookings}\n\n"
             )
         keyboard = await kb.users(
-            prefix, "main_menu", page, len(users), page_size, end_index
+            prefix, "main_menu", page, len(users), page_size, end_index, l10n=l10n
         )
     else:
         text = "📨 Пу-пу-пу:\n\n" "Нет ни одного пользователя.. 🤷‍️"
-        keyboard = await kb.admin_main()
+        keyboard = await kb.admin_main(l10n=l10n)
 
     # Проверяем, сообщение ли это или callback
     if isinstance(message_or_callback, Message):

@@ -2,6 +2,7 @@ import asyncio
 
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
+from fluent.runtime import FluentLocalization
 from yookassa import Configuration, Payment
 
 from config import LINK_BOT, YOKASSA_ACCOUNT_ID, YOKASSA_SECRET_KEY
@@ -12,7 +13,7 @@ Configuration.account_id = YOKASSA_ACCOUNT_ID
 Configuration.secret_key = YOKASSA_SECRET_KEY
 
 
-async def create_payment(description: str, amount: int):
+async def create_payment(description: str, amount: int, l10n: FluentLocalization):
     payment = Payment.create(
         {
             "amount": {"value": amount, "currency": "RUB"},
@@ -25,7 +26,9 @@ async def create_payment(description: str, amount: int):
     return payment.id, payment.confirmation.confirmation_url
 
 
-async def cancel_payment_handler(callback: CallbackQuery, state: FSMContext):
+async def cancel_payment_handler(
+    callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization
+):
     await state.update_data(payment_status="cancelled")
     await callback.answer("Платеж был отменен.", show_alert=True)
 
@@ -36,6 +39,6 @@ async def cancel_payment_handler(callback: CallbackQuery, state: FSMContext):
         )
 
     await callback.message.edit_text(
-        "Платеж был отменен.", reply_markup=await kb.user_main()
+        "Платеж был отменен.", reply_markup=await kb.user_main(l10n=l10n)
     )
     await state.clear()

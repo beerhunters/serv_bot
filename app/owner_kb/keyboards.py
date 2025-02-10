@@ -146,7 +146,7 @@ from app.general_keyboards import create_buttons
 #         ("❔ Информация", "info_owner"),
 #     ]
 #     return await create_buttons(buttons_data)
-async def owner_main() -> InlineKeyboardMarkup:
+async def owner_main(l10n) -> InlineKeyboardMarkup:
     buttons_data = [
         ("⚙️ Управление администраторами", "manage_admin", "callback"),
         ("👥 Управление пользователями", "manage_users", "callback"),
@@ -158,7 +158,7 @@ async def owner_main() -> InlineKeyboardMarkup:
         ("🧠 Управление квизами", "manage_quizzes", "callback"),
         ("❔ Информация", "info_owner", "callback"),
     ]
-    return await create_buttons(buttons_data)
+    return await create_buttons(buttons_data, l10n=l10n, main_menu=False)
 
 
 # Управление администраторами
@@ -169,13 +169,13 @@ async def owner_main() -> InlineKeyboardMarkup:
 #         ("➖ Удалить админа", "delete_admin"),
 #     ]
 #     return await create_buttons(buttons_data, "main_menu")
-async def manage_admin() -> InlineKeyboardMarkup:
+async def manage_admin(l10n) -> InlineKeyboardMarkup:
     buttons_data = [
         ("📋 Список администраторов", "list_admins", "callback"),
         ("➕ Добавить админа", "add_admin", "callback"),
         ("➖ Удалить админа", "delete_admin", "callback"),
     ]
-    return await create_buttons(buttons_data)
+    return await create_buttons(buttons_data, l10n=l10n)
 
 
 # async def manage_admin() -> InlineKeyboardMarkup:
@@ -200,12 +200,12 @@ async def request_user_button() -> ReplyKeyboardMarkup:
 #         for i, (admin_id, tg_id, tg_username, name) in enumerate(admins, 1)
 #     ]
 #     return await create_buttons(buttons_data, "main_menu")
-async def list_of_admins(admins) -> InlineKeyboardMarkup:
+async def list_of_admins(admins, l10n) -> InlineKeyboardMarkup:
     buttons_data = [
         (f"{i}. {tg_username}", f"admin_{admin_id}", "callback")
         for i, (admin_id, tg_id, tg_username, name) in enumerate(admins, 1)
     ]
-    return await create_buttons(buttons_data)
+    return await create_buttons(buttons_data, l10n=l10n)
 
 
 # async def list_of_admins(admins) -> InlineKeyboardMarkup:
@@ -220,13 +220,13 @@ async def list_of_admins(admins) -> InlineKeyboardMarkup:
 #         ("➖ Удалить код", "delete_promo"),
 #     ]
 #     return await create_buttons(buttons_data, "main_menu")
-async def manage_promo() -> InlineKeyboardMarkup:
+async def manage_promo(l10n) -> InlineKeyboardMarkup:
     buttons_data = [
         ("📋 Список промокодов", "list_promocodes", "callback"),
         ("➕ Добавить код", "add_promo", "callback"),
         ("➖ Удалить код", "delete_promo", "callback"),
     ]
-    return await create_buttons(buttons_data)
+    return await create_buttons(buttons_data, l10n=l10n)
 
 
 # async def manage_promo() -> InlineKeyboardMarkup:
@@ -296,6 +296,7 @@ async def promocodes(
     promocodes_list: int,
     page_size: int,
     end_index: int,
+    l10n,
 ) -> InlineKeyboardMarkup:
     buttons_data = []
     if promocodes_list > page_size:
@@ -307,7 +308,7 @@ async def promocodes(
             buttons_data.append(
                 ("🔜 Следующая", f"{cd_next_prev}{page + 1}", "callback")
             )
-    return await create_buttons(buttons_data, back_callback_data=cd_back)
+    return await create_buttons(buttons_data, back_callback_data=cd_back, l10n=l10n)
 
 
 # Список промокодов
@@ -317,12 +318,12 @@ async def promocodes(
 #         for i, promocode in enumerate(list_of_promocodes, 1)
 #     ]
 #     return await create_buttons(buttons_data, "list_promocodes")
-async def list_promocodes(list_of_promocodes) -> InlineKeyboardMarkup:
+async def list_promocodes(list_of_promocodes, l10n) -> InlineKeyboardMarkup:
     buttons_data = [
         (f"{i}. {promocode.name}", f"promocode_{promocode.id}", "callback")
         for i, promocode in enumerate(list_of_promocodes, 1)
     ]
-    return await create_buttons(buttons_data, "list_promocodes")
+    return await create_buttons(buttons_data, "list_promocodes", l10n=l10n)
 
 
 # async def list_promocodes(list_of_promocodes) -> InlineKeyboardMarkup:
@@ -338,23 +339,23 @@ async def list_promocodes(list_of_promocodes) -> InlineKeyboardMarkup:
 #         ("Продлить срок", "extend_promo"),
 #     ]
 #     return await create_buttons(buttons_data, "list_promocodes")
-async def promo_changes(is_active) -> InlineKeyboardMarkup:
+async def promo_changes(is_active, l10n) -> InlineKeyboardMarkup:
     status_button_text = "Отключить промокод" if is_active else "Включить промокод"
     status_callback_text = "switch_off" if is_active else "switch_on"
     buttons_data = [
         (status_button_text, status_callback_text, "callback"),
         ("Продлить срок", "extend_promo", "callback"),
     ]
-    return await create_buttons(buttons_data, "list_promocodes")
+    return await create_buttons(buttons_data, "list_promocodes", l10n=l10n)
 
 
 # Сохранение изменений
-async def save_changes(cancel_callback) -> InlineKeyboardMarkup:
+async def save_changes(cancel_callback, l10n) -> InlineKeyboardMarkup:
     buttons_data = [
         ("Сохранить", "save_new_date", "callback"),
         ("Отменить", cancel_callback, "callback"),
     ]
-    return await create_buttons(buttons_data)
+    return await create_buttons(buttons_data, l10n=l10n)
 
 
 # Управление печатью
@@ -386,7 +387,7 @@ async def save_changes(cancel_callback) -> InlineKeyboardMarkup:
 #     ]
 #     return await create_buttons(buttons_data, "main_menu")
 async def manage_printing(
-    printing_info, scanning_info, free_printing_info
+    printing_info, scanning_info, free_printing_info, l10n
 ) -> InlineKeyboardMarkup:
     buttons_data = [
         (
@@ -414,7 +415,7 @@ async def manage_printing(
             "callback",
         ),
     ]
-    return await create_buttons(buttons_data)
+    return await create_buttons(buttons_data, l10n=l10n)
 
 
 # Управление тарифами
@@ -425,13 +426,13 @@ async def manage_printing(
 #         ("➖ Удалить тариф", "delete_tariff"),
 #     ]
 #     return await create_buttons(buttons_data, "main_menu")
-async def manage_tariffs() -> InlineKeyboardMarkup:
+async def manage_tariffs(l10n) -> InlineKeyboardMarkup:
     buttons_data = [
         ("📋 Список всех тарифов", "list_tariffs", "callback"),
         ("➕ Добавить тариф", "add_tariff", "callback"),
         # ("➖ Удалить тариф", "delete_tariff", "callback"),
     ]
-    return await create_buttons(buttons_data)
+    return await create_buttons(buttons_data, l10n=l10n)
 
 
 # async def manage_tariffs() -> InlineKeyboardMarkup:
@@ -501,6 +502,7 @@ async def tariffs(
     list_of_tariffs: int,
     page_size: int,
     end_index: int,
+    l10n,
 ) -> InlineKeyboardMarkup:
     buttons_data = []
     if list_of_tariffs > page_size:
@@ -512,16 +514,16 @@ async def tariffs(
             buttons_data.append(
                 ("🔜 Следующая", f"{cd_next_prev}{page + 1}", "callback")
             )
-    return await create_buttons(buttons_data, back_callback_data=cd_back)
+    return await create_buttons(buttons_data, back_callback_data=cd_back, l10n=l10n)
 
 
 # Список тарифов
-async def list_tariffs(list_of_tariffs) -> InlineKeyboardMarkup:
+async def list_tariffs(list_of_tariffs, l10n) -> InlineKeyboardMarkup:
     buttons_data = [
         (f"{i}. {tariff.name}", f"tariff_{tariff.id}", "callback")
         for i, tariff in enumerate(list_of_tariffs, 1)
     ]
-    return await create_buttons(buttons_data, "list_tariffs")
+    return await create_buttons(buttons_data, "list_tariffs", l10n=l10n)
 
 
 # async def list_tariffs(list_of_tariffs) -> InlineKeyboardMarkup:
@@ -529,35 +531,35 @@ async def list_tariffs(list_of_tariffs) -> InlineKeyboardMarkup:
 
 
 # Изменение тарифа
-async def tariff_changes(is_active) -> InlineKeyboardMarkup:
+async def tariff_changes(is_active, l10n) -> InlineKeyboardMarkup:
     status_button_text = "Отключить тариф" if is_active else "Включить тариф"
     status_callback_text = "switch_off" if is_active else "switch_on"
     buttons_data = [
         (status_button_text, status_callback_text, "callback"),
         ("Изменить цену", "change_price_tariff", "callback"),
     ]
-    return await create_buttons(buttons_data, "list_tariffs")
+    return await create_buttons(buttons_data, "list_tariffs", l10n=l10n)
 
 
 # Управление пользователями
-async def manage_users() -> InlineKeyboardMarkup:
+async def manage_users(l10n) -> InlineKeyboardMarkup:
     buttons_data = [
         ("📋 Список всех пользователей", "list_users", "callback"),
         ("🔎 Найти пользователя", "find_user", "callback"),
         ("🗣️ Редактировать пользователя", "find_id", "callback"),
         ("🗃️ Скачать список пользователей", "download_users", "callback"),
     ]
-    return await create_buttons(buttons_data)
+    return await create_buttons(buttons_data, l10n=l10n)
 
 
 # Поиск инструментов
-async def search_tools() -> InlineKeyboardMarkup:
+async def search_tools(l10n) -> InlineKeyboardMarkup:
     buttons_data = [
         ("📍 Поиск по ID", "find_id", "callback"),
         ("📱 Поиск по номеру телефона", "find_phone", "callback"),
         ("👤 Поиск по фамилии", "find_name", "callback"),
     ]
-    return await create_buttons(buttons_data, "manage_users")
+    return await create_buttons(buttons_data, "manage_users", l10n=l10n)
 
 
 # Пагинация пользователей
@@ -599,7 +601,13 @@ async def search_tools() -> InlineKeyboardMarkup:
 #     await add_back_button(buttons, cd_back)
 #     return await create_inline_keyboard(buttons)
 async def users(
-    cd_next_prev, cd_back, page: int, users_list: int, page_size: int, end_index: int
+    cd_next_prev,
+    cd_back,
+    page: int,
+    users_list: int,
+    page_size: int,
+    end_index: int,
+    l10n,
 ) -> InlineKeyboardMarkup:
     buttons_data = []
     if users_list > page_size:
@@ -611,16 +619,16 @@ async def users(
             buttons_data.append(
                 ("🔜 Следующая", f"{cd_next_prev}{page + 1}", "callback")
             )
-    return await create_buttons(buttons_data, back_callback_data=cd_back)
+    return await create_buttons(buttons_data, back_callback_data=cd_back, l10n=l10n)
 
 
 # Список пользователей
-async def list_users(users_list) -> InlineKeyboardMarkup:
+async def list_users(users_list, l10n) -> InlineKeyboardMarkup:
     buttons_data = [
         (f"{i}. {user.name}", f"user_{user.id}", "callback")
         for i, user in enumerate(users_list, 1)
     ]
-    return await create_buttons(buttons_data, "list_users")
+    return await create_buttons(buttons_data, "list_users", l10n=l10n)
 
 
 # async def list_users(users_list) -> InlineKeyboardMarkup:
@@ -628,13 +636,13 @@ async def list_users(users_list) -> InlineKeyboardMarkup:
 
 
 # Управление локациями
-async def manage_locations() -> InlineKeyboardMarkup:
+async def manage_locations(l10n) -> InlineKeyboardMarkup:
     buttons_data = [
         ("📋 Список всех локаций", "list_locations", "callback"),
         ("➕ Добавить локацию", "add_location", "callback"),
         ("➖ Удалить локацию", "delete_location", "callback"),
     ]
-    return await create_buttons(buttons_data)
+    return await create_buttons(buttons_data, l10n=l10n)
 
 
 # async def manage_locations() -> InlineKeyboardMarkup:
@@ -696,6 +704,7 @@ async def locations(
     locations_list: int,
     page_size: int,
     end_index: int,
+    l10n,
 ) -> InlineKeyboardMarkup:
     buttons_data = []
     if locations_list > page_size:
@@ -707,16 +716,16 @@ async def locations(
             buttons_data.append(
                 ("🔜 Следующая", f"{cd_next_prev}{page + 1}", "callback")
             )
-    return await create_buttons(buttons_data, back_callback_data=cd_back)
+    return await create_buttons(buttons_data, back_callback_data=cd_back, l10n=l10n)
 
 
 # Список локаций
-async def list_locations(locations_list) -> InlineKeyboardMarkup:
+async def list_locations(locations_list, l10n) -> InlineKeyboardMarkup:
     buttons_data = [
         (f"{i}. {location.name}", f"location_{location.id}", "callback")
         for i, location in enumerate(locations_list, 1)
     ]
-    return await create_buttons(buttons_data, "list_locations")
+    return await create_buttons(buttons_data, "list_locations", l10n=l10n)
 
 
 # async def list_locations(locations_list) -> InlineKeyboardMarkup:
@@ -724,7 +733,7 @@ async def list_locations(locations_list) -> InlineKeyboardMarkup:
 
 
 # Управление квизами
-async def manage_quizzes(quiz_available) -> InlineKeyboardMarkup:
+async def manage_quizzes(quiz_available, l10n) -> InlineKeyboardMarkup:
     buttons_data = [
         (
             (
@@ -738,27 +747,27 @@ async def manage_quizzes(quiz_available) -> InlineKeyboardMarkup:
         ("📝 Загрузить квиз", "upload_quiz", "callback"),
         ("🏆 Результаты квиза", "quiz_results_for_display", "callback"),
     ]
-    return await create_buttons(buttons_data)
+    return await create_buttons(buttons_data, l10n=l10n)
 
 
 # Клавиатура для выбора конкретного поля для редактирования
-async def edit_user():
+async def edit_user(l10n) -> InlineKeyboardMarkup:
     buttons_data = [
         ("✏️ Изменить ФИО", "current_edit_name", "callback"),
         ("📞 Изменить Телефон", "current_edit_phone", "callback"),
         ("📧 Изменить Email", "current_edit_email", "callback"),
         ("🗓️ Изменить Посещения", "current_edit_visits", "callback"),
     ]
-    return await create_buttons(buttons_data, "manage_users")
+    return await create_buttons(buttons_data, "manage_users", l10n=l10n)
 
 
 # Основная клавиатура управления для действия над пользователем
-async def edit_keyboard(user_id: int):
+async def edit_keyboard(user_id: int, l10n) -> InlineKeyboardMarkup:
     buttons_data = [
         ("✏️ Редактировать", f"edit_user_{user_id}", "callback"),
         ("❌ Удалить", f"delete_user_{user_id}", "callback"),
     ]
-    return await create_buttons(buttons_data, "list_users")
+    return await create_buttons(buttons_data, "list_users", l10n=l10n)
 
 
 # async def manage_booking_mr() -> InlineKeyboardMarkup:
@@ -767,14 +776,14 @@ async def edit_keyboard(user_id: int):
 #     )
 
 
-async def manage_booking() -> InlineKeyboardMarkup:
+async def manage_booking(l10n) -> InlineKeyboardMarkup:
     buttons_data = [
         ("📋 Список бронирований", "list_booking", "callback"),
         # ("❌ Удалить запись", "delete_booking_mr"),
         # ("🗣️ Редактировать пользователя", "find_id"),
         # ("🗃️ Скачать список пользователей", "download_users"),
     ]
-    return await create_buttons(buttons_data)
+    return await create_buttons(buttons_data, l10n=l10n)
 
 
 # async def booking_mr_list(
@@ -826,6 +835,7 @@ async def booking_list(
     bookings_list: int,
     page_size: int,
     end_index: int,
+    l10n,
 ) -> InlineKeyboardMarkup:
     buttons_data = []
     if bookings_list > page_size:
@@ -837,7 +847,7 @@ async def booking_list(
             buttons_data.append(
                 ("🔜 Следующая", f"{cd_next_prev}{page + 1}", "callback")
             )
-    return await create_buttons(buttons_data, back_callback_data=cd_back)
+    return await create_buttons(buttons_data, back_callback_data=cd_back, l10n=l10n)
 
 
 # async def back_button(callback_data="main_menu") -> InlineKeyboardMarkup:

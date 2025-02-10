@@ -535,8 +535,8 @@ async def set_visit_date(
             callback,
             l10n,
             "msg_all_guests_registered",  # Ключ для локализованного текста регистрации
-            # reply_markup=await kb.user_main(l10n),
-            reply_markup=await kb.user_main(),
+            reply_markup=await kb.user_main(l10n=l10n),
+            # reply_markup=await kb.user_main(),
         )
         await state.clear()
     else:

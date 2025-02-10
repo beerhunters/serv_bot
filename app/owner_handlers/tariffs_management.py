@@ -1,9 +1,8 @@
-from typing import Union
-
 from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import CallbackQuery, Message
+from fluent.runtime import FluentLocalization
 
 import app.owner_kb.keyboards as kb
 import app.general_keyboards as gkb
@@ -36,17 +35,21 @@ class TariffManagement(StatesGroup):
 
 
 @owner_tariff_management.callback_query(F.data == "manage_tariffs")
-async def manage_tariffs(callback: CallbackQuery, state: FSMContext):
+async def manage_tariffs(
+    callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization
+):
     await state.clear()
     await callback.message.edit_text(
-        text="💠 Выберите действие:", reply_markup=await kb.manage_tariffs()
+        text="💠 Выберите действие:", reply_markup=await kb.manage_tariffs(l10n=l10n)
     )
     await callback.answer()
 
 
 @owner_tariff_management.callback_query(F.data == "list_tariffs")
 @owner_tariff_management.callback_query(F.data.startswith("my_tariff_page_"))
-async def list_promocodes(callback: CallbackQuery, state: FSMContext):
+async def list_promocodes(
+    callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization
+):
     await state.clear()
     page = 1  # Стартовая страница
 
@@ -79,10 +82,11 @@ async def list_promocodes(callback: CallbackQuery, state: FSMContext):
             len(tariffs),
             page_size,
             end_index,
+            l10n=l10n,
         )
     else:
         text = "📨 Пу-пу-пу:\n\n" "Тарифы пока не созданы.. 🤷‍️"
-        keyboard = await kb.owner_main()
+        keyboard = await kb.owner_main(l10n=l10n)
 
     # Сравниваем текст и клавиатуру
     current_message = callback.message.text
@@ -114,7 +118,7 @@ async def list_promocodes(callback: CallbackQuery, state: FSMContext):
 # @owner_tariff_management.callback_query(
 #     F.data.startswith("tariff_"), TariffManagement.edit_tariff
 # )
-async def edit_tariff(event: Message, state: FSMContext):
+async def edit_tariff(event: Message, state: FSMContext, l10n: FluentLocalization):
     # if isinstance(event, CallbackQuery):
     #     tariff_id = int(event.data.split("_")[2])
     #     tariff = await get_tariff_by_id(tariff_id)
@@ -144,7 +148,7 @@ async def edit_tariff(event: Message, state: FSMContext):
     await event.delete()
     await event.answer(
         "Можно изменить цену или включить/отключить тариф\nВыберите действие:",
-        reply_markup=await kb.tariff_changes(tariff.is_active),
+        reply_markup=await kb.tariff_changes(tariff.is_active, l10n=l10n),
     )
     # tariff = await get_tariff_by_id(tariff_id)
     # await state.update_data(
@@ -203,13 +207,17 @@ async def edit_tariff(event: Message, state: FSMContext):
 
 
 @owner_tariff_management.callback_query(F.data == "change_price_tariff")
-async def change_price_tariff(callback: CallbackQuery, state: FSMContext):
+async def change_price_tariff(
+    callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization
+):
     await callback.message.edit_text("Введите новую цену тарифа: ")
     await state.set_state(TariffManagement.edit_tariff_price)
 
 
 @owner_tariff_management.message(TariffManagement.edit_tariff_price)
-async def edit_tariff_price(message: Message, state: FSMContext):
+async def edit_tariff_price(
+    message: Message, state: FSMContext, l10n: FluentLocalization
+):
     data = await state.get_data()
     try:
         new_price = int(message.text)
@@ -220,7 +228,9 @@ async def edit_tariff_price(message: Message, state: FSMContext):
     await create_or_update_tariff(name=tariff_name, price=new_price)
     await message.answer(
         "🟢 Цена тарифа успешно изменена!",
-        reply_markup=await gkb.create_buttons(back_callback_data="manage_tariffs"),
+        reply_markup=await gkb.create_buttons(
+            back_callback_data="manage_tariffs", l10n=l10n
+        ),
     )
     await state.clear()
 
@@ -228,7 +238,9 @@ async def edit_tariff_price(message: Message, state: FSMContext):
 @owner_tariff_management.callback_query(
     F.data.startswith("switch_"), TariffManagement.select_changes
 )
-async def switch_on_off_tariff(callback: CallbackQuery, state: FSMContext):
+async def switch_on_off_tariff(
+    callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization
+):
     # "switch_off" if is_active else "switch_on"
     status = callback.data.split("_")[1]
     if status == "on":
@@ -240,7 +252,9 @@ async def switch_on_off_tariff(callback: CallbackQuery, state: FSMContext):
     await create_or_update_tariff(tariff_name, is_active=new_status)
     # status_text = f"{"🟢" if new_status else "🔴"} Тариф - '{tariff_name}' успешно {"<b>Включен</b>" if new_status else "<b>Выключен</b>"}"
     status_text = f"Тариф - '{tariff_name}' успешно изменен"
-    await callback.message.edit_text(status_text, reply_markup=await kb.owner_main())
+    await callback.message.edit_text(
+        status_text, reply_markup=await kb.owner_main(l10n=l10n)
+    )
     await state.clear()
     await callback.answer()
 
@@ -249,7 +263,7 @@ async def switch_on_off_tariff(callback: CallbackQuery, state: FSMContext):
 # @owner_tariff_management.callback_query(
 #     F.data.startswith("tariff_"), TariffManagement.del_tariff
 # )
-async def del_tariff(event: Message, state: FSMContext):
+async def del_tariff(event: Message, state: FSMContext, l10n: FluentLocalization):
     tariff_id = int(event.text.split("_")[2])
     await delete_tariff(tariff_id)
     # await event.message.edit_text(
@@ -263,19 +277,23 @@ async def del_tariff(event: Message, state: FSMContext):
     # Удаляем сообщение перед ответом
     await event.delete()
     await event.answer(
-        f"👌🏼Тариф успешно удален ❌", reply_markup=await kb.owner_main()
+        f"👌🏼Тариф успешно удален ❌", reply_markup=await kb.owner_main(l10n=l10n)
     )
 
 
 @owner_tariff_management.callback_query(F.data == "add_tariff")
-async def add_tariff(callback: CallbackQuery, state: FSMContext):
+async def add_tariff(
+    callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization
+):
     # await callback.answer("Функция в разработке", show_alert=True)
     await callback.message.edit_text("Введите название тарифа: ")
     await state.set_state(TariffManagement.add_tariff_name)
 
 
 @owner_tariff_management.message(TariffManagement.add_tariff_name)
-async def add_tariff_name(message: Message, state: FSMContext):
+async def add_tariff_name(
+    message: Message, state: FSMContext, l10n: FluentLocalization
+):
     tariff_name = message.text
     await state.update_data(tariff_name=tariff_name)
     await message.answer("Введите service_id тарифа: ")
@@ -283,7 +301,9 @@ async def add_tariff_name(message: Message, state: FSMContext):
 
 
 @owner_tariff_management.message(TariffManagement.add_tariff_service_id)
-async def add_tariff_name(message: Message, state: FSMContext):
+async def add_tariff_name(
+    message: Message, state: FSMContext, l10n: FluentLocalization
+):
     tariff_service_id = int(message.text)
     await state.update_data(tariff_service_id=tariff_service_id)
     await message.answer("Введите описание тарифа: ")
@@ -291,7 +311,9 @@ async def add_tariff_name(message: Message, state: FSMContext):
 
 
 @owner_tariff_management.message(TariffManagement.add_tariff_description)
-async def add_tariff_description(message: Message, state: FSMContext):
+async def add_tariff_description(
+    message: Message, state: FSMContext, l10n: FluentLocalization
+):
     tariff_description = message.text
     await state.update_data(tariff_description=tariff_description)
     await message.answer("Введите цену тарифа: ")
@@ -299,7 +321,9 @@ async def add_tariff_description(message: Message, state: FSMContext):
 
 
 @owner_tariff_management.message(TariffManagement.add_tariff_price)
-async def set_tariff_price(message: Message, state: FSMContext):
+async def set_tariff_price(
+    message: Message, state: FSMContext, l10n: FluentLocalization
+):
     try:
         tariff_price = int(message.text)
     except ValueError:
@@ -317,14 +341,18 @@ async def set_tariff_price(message: Message, state: FSMContext):
         f"Описание: {tariff_description}\n"
         f"Цена: {tariff_price}\n"
     )
-    await message.answer(text, reply_markup=await kb.save_changes("list_tariffs"))
+    await message.answer(
+        text, reply_markup=await kb.save_changes("list_tariffs", l10n=l10n)
+    )
     await state.set_state(TariffManagement.finish_add_tariff)
 
 
 @owner_tariff_management.callback_query(
     F.data == "save_new_date", TariffManagement.finish_add_tariff
 )
-async def save_new_date(callback: CallbackQuery, state: FSMContext):
+async def save_new_date(
+    callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization
+):
     data = await state.get_data()
     tariff_name = data.get("tariff_name")
     tariff_description = data.get("tariff_description")
@@ -337,6 +365,6 @@ async def save_new_date(callback: CallbackQuery, state: FSMContext):
         service_id=tariff_service_id,
     )
     text = f"Тариф '{tariff_name}' успешно создан"
-    await callback.message.edit_text(text, reply_markup=await kb.owner_main())
+    await callback.message.edit_text(text, reply_markup=await kb.owner_main(l10n=l10n))
     await state.clear()
     await callback.answer()

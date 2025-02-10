@@ -4,6 +4,7 @@ from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import CommandStart, Command
+from fluent.runtime import FluentLocalization
 
 from app.database.requests import create_or_update_admin
 from config import GREETINGS_ADMIN, INFO_ADMIN
@@ -57,7 +58,9 @@ admin_router.callback_query.filter(IsAdminFilter(is_admin=True))
 @admin_router.message(CommandStart())
 @admin_router.message(Command("cancel"))
 @admin_router.callback_query(F.data == "main_menu")
-async def cmd_start(message: Message | CallbackQuery, state: FSMContext):
+async def cmd_start(
+    message: Message | CallbackQuery, state: FSMContext, l10n: FluentLocalization
+):
     await state.clear()
     admin = await create_or_update_admin(message.from_user.id)
 
@@ -85,7 +88,7 @@ async def cmd_start(message: Message | CallbackQuery, state: FSMContext):
 
     # Если сообщение от пользователя
     if isinstance(message, Message):
-        await message.answer(greeting_text, reply_markup=await kb.admin_main())
+        await message.answer(greeting_text, reply_markup=await kb.admin_main(l10n=l10n))
     else:
         # Получаем текущее сообщение и клавиатуру
         current_message = message.message.text
@@ -93,10 +96,12 @@ async def cmd_start(message: Message | CallbackQuery, state: FSMContext):
 
         # Проверяем, изменилось ли сообщение или клавиатура
         if (current_message != greeting_text) or (
-            current_keyboard_text != str(await kb.admin_main())
+            current_keyboard_text != str(await kb.admin_main(l10n=l10n))
         ):
             await message.message.edit_text(
-                greeting_text, reply_markup=await kb.admin_main(), parse_mode="HTML"
+                greeting_text,
+                reply_markup=await kb.admin_main(l10n=l10n),
+                parse_mode="HTML",
             )
         else:
             # Если изменений нет, отправляем пустой ответ
@@ -104,7 +109,9 @@ async def cmd_start(message: Message | CallbackQuery, state: FSMContext):
 
 
 @admin_router.callback_query(F.data == "info_admin")
-async def info(callback: CallbackQuery):
+async def info(callback: CallbackQuery, l10n: FluentLocalization):
     # await callback.message.edit_text(INFO_ADMIN, reply_markup=await kb.back_button())
-    await callback.message.edit_text(INFO_ADMIN, reply_markup=await kb.create_buttons())
+    await callback.message.edit_text(
+        INFO_ADMIN, reply_markup=await kb.create_buttons(l10n=l10n)
+    )
     await callback.answer()

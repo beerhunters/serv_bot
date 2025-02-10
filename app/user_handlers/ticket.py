@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
@@ -40,8 +42,8 @@ async def helpdesk(
         callback,
         l10n,
         "helpdesk_menu",  # Ключ для локализованного текста регистрации
-        # reply_markup=await kb.tickets_menu(l10n),
-        reply_markup=await kb.tickets_menu(),
+        reply_markup=await kb.tickets_menu(l10n=l10n),
+        # reply_markup=await kb.tickets_menu(),
     )
 
 
@@ -79,8 +81,8 @@ async def set_description(
         message,
         l10n,
         "ticket_location",  # Ключ для локализованного текста регистрации
-        # reply_markup=await kb.locations(l10n),
-        reply_markup=await kb.locations(),
+        reply_markup=await kb.locations(l10n=l10n),
+        # reply_markup=await kb.locations(),
     )
 
 
@@ -176,7 +178,9 @@ async def set_photo(message: Message, state: FSMContext, l10n: FluentLocalizatio
         return
 
     data = await state.get_data()
+    reg_time = datetime.now()
     ticket = await create_ticket(
+        reg_time=reg_time,
         tg_id=message.chat.id,
         description=data["description"],
         location_id=data["location_id"],
@@ -186,8 +190,8 @@ async def set_photo(message: Message, state: FSMContext, l10n: FluentLocalizatio
         message,
         l10n,
         "ticket_send",  # Ключ для локализованного текста регистрации
-        # reply_markup=await kb.user_main(l10n)
-        reply_markup=await kb.user_main(),
+        reply_markup=await kb.user_main(l10n=l10n),
+        # reply_markup=await kb.user_main(),
     )
     # ticket_text = (
     #     f"📬❗️\n{l10n.format_value('user_msg')} {ticket.user.tg_username} {l10n.format_value('create_msg')} <code>#{ticket.id}</code>.\n\n"
@@ -198,7 +202,7 @@ async def set_photo(message: Message, state: FSMContext, l10n: FluentLocalizatio
     # )
     ticket_text = (
         f"📬❗️\nПользователь {ticket.user.tg_username} создал новую заявку <code>#{ticket.id}</code>.\n\n"
-        f"<b>Сообщение от пользователя:</b>\n <em>{ticket.description}</em>\n\n"
+        f"<b>Сообщение от пользователя:</b>\n<em>{ticket.description}</em>\n\n"
         f"<b>ФИО:</b> {ticket.user.name}\n"
         f"<b>Телефон для связи:</b> {ticket.user.contact}\n"
         f"<b>Расположение:</b> {ticket.location.name}\n"
@@ -211,15 +215,17 @@ async def set_photo(message: Message, state: FSMContext, l10n: FluentLocalizatio
                 caption=ticket_text,
                 photo=data["photo_id"],
                 show_caption_above_media=True,
-                # reply_markup=await admin_kb.accept_ticket(l10n),
-                reply_markup=await admin_kb.accept_ticket(),
+                reply_markup=await admin_kb.admin_main(l10n=l10n),
+                # reply_markup=await admin_kb.accept_ticket(l10n=l10n),
+                # reply_markup=await admin_kb.accept_ticket(),
             )
         else:
             await message.bot.send_message(
                 admin,
                 ticket_text,
-                # reply_markup=await admin_kb.accept_ticket(l10n),
-                reply_markup=await admin_kb.accept_ticket(),
+                reply_markup=await admin_kb.admin_main(l10n=l10n),
+                # reply_markup=await admin_kb.accept_ticket(l10n=l10n),
+                # reply_markup=await admin_kb.accept_ticket(),
                 parse_mode="HTML",
             )
 
@@ -307,12 +313,12 @@ async def all_tickets(callback: CallbackQuery, l10n: FluentLocalization):
             len(tickets_list),
             page_size,
             end_index,
-            # l10n=l10n
+            l10n=l10n,
         )
     else:
         text = l10n.format_value("empty_history")
-        # keyboard = await kb.user_main(l10n)
-        keyboard = await kb.user_main()
+        keyboard = await kb.user_main(l10n=l10n)
+        # keyboard = await kb.user_main()
 
     # Сравниваем текст и клавиатуру
     current_message = callback.message.text

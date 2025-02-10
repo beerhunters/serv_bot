@@ -288,26 +288,46 @@ class MyHandler(ErrorHandler):
         # Отправляем сообщение пользователю
         try:
             update: Update = self.event.update
-            l10n = get_fluent_localization(update.message.from_user.language_code)
-            # 🔹 Создаем кнопку "Связаться с Администратором" через ID
-            admin_button = await kb.create_buttons(
-                buttons_data=[
-                    (l10n.format_value("contact_admin_button"), ADMIN_URL, "url")
-                ],
-                main_menu=False,  # Отключаем кнопку "Главное меню"
-            )
+            # l10n = get_fluent_localization(update.message.from_user.language_code)
+            # # 🔹 Создаем кнопку "Связаться с Администратором" через ID
+            # admin_button = await kb.create_buttons(
+            #     buttons_data=[
+            #         (l10n.format_value("contact_admin_button"), ADMIN_URL, "url")
+            #     ],
+            #     main_menu=False,  # Отключаем кнопку "Главное меню"
+            # )
             # user_message = (
             #     "⚠️ Произошла ошибка!\n\n"
             #     "Пожалуйста, сделайте скриншот этого сообщения и отправьте его администратору, "
             #     "описав, что вы делали перед ошибкой.\n\n"
             #     "Спасибо за помощь в улучшении бота! 😊"
             # )
-            user_message = l10n.format_value("error_text")
+            # user_message = l10n.format_value("error_text")
             # Проверяем, где есть сообщение, чтобы отправить пользователю
             if update.message:
+                l10n = get_fluent_localization(update.message.from_user.language_code)
+                # 🔹 Создаем кнопку "Связаться с Администратором" через ID
+                admin_button = await kb.create_buttons(
+                    buttons_data=[
+                        (l10n.format_value("contact_admin_button"), ADMIN_URL, "url")
+                    ],
+                    main_menu=False,  # Отключаем кнопку "Главное меню"
+                )
+                user_message = l10n.format_value("error_text")
                 await update.message.answer(user_message, reply_markup=admin_button)
                 logging.info("Сообщение об ошибке отправлено пользователю (Message).")
             elif update.callback_query and update.callback_query.message:
+                l10n = get_fluent_localization(
+                    update.callback_query.from_user.language_code
+                )
+                # 🔹 Создаем кнопку "Связаться с Администратором" через ID
+                admin_button = await kb.create_buttons(
+                    buttons_data=[
+                        (l10n.format_value("contact_admin_button"), ADMIN_URL, "url")
+                    ],
+                    main_menu=False,  # Отключаем кнопку "Главное меню"
+                )
+                user_message = l10n.format_value("error_text")
                 await update.callback_query.message.answer(
                     user_message, reply_markup=admin_button
                 )
@@ -333,8 +353,8 @@ class MyHandler(ErrorHandler):
                     f"📋 <b>Сообщение:</b> {exception_message}\n\n"
                     f"📍 <b>Местоположение:</b>\n{error_location}\n\n"
                     f"🖥 <b>Traceback:</b>\n<pre>{traceback_snippet}</pre>",
-                    # reply_markup=await kb.create_buttons(l10n),
-                    reply_markup=await kb.create_buttons(),
+                    reply_markup=await kb.create_buttons(l10n=l10n),
+                    # reply_markup=await kb.create_buttons(),
                 )
         except Exception as e:
             logging.error(f"Не удалось отправить сообщение владельцу: {e}")

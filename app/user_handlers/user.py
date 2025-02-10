@@ -109,8 +109,8 @@ async def cmd_start(
             message,
             l10n,
             "greeting",  # Ключ локализованного приветствия
-            # reply_markup=await kb.user_main(l10n),
-            reply_markup=await kb.user_main(),
+            reply_markup=await kb.user_main(l10n=l10n),
+            # reply_markup=await kb.user_main(),
         )
         await state.clear()
     else:
@@ -163,8 +163,8 @@ async def reg_name(message: Message, state: FSMContext, l10n: FluentLocalization
     await message.answer_photo(
         photo=input_file,
         caption=l10n.format_value("send_contact"),
-        # reply_markup=await kb.create_contact_button(l10n),
-        reply_markup=kb.contact,
+        reply_markup=await kb.create_contact_button(l10n=l10n),
+        # reply_markup=kb.contact,
     )
 
 
@@ -198,8 +198,8 @@ async def reg_contact(message: Message, state: FSMContext, l10n: FluentLocalizat
             message,
             l10n,
             "send_contact",  # Ключ для локализованного текста регистрации
-            # reply_markup=await kb.create_contact_button(l10n),
-            reply_markup=kb.contact,
+            reply_markup=await kb.create_contact_button(l10n=l10n),
+            # reply_markup=kb.contact,
         )
 
 
@@ -337,21 +337,25 @@ async def reg_email(message: Message, state: FSMContext, l10n: FluentLocalizatio
     await state.clear()
 
     # Создаем ссылку для приглашения
-    invite_link = await message.bot.create_chat_invite_link(
-        chat_id=GROUP_ID,
-        name=l10n.format_value(
-            "join_group"
-        ),  # Используем локализованный текст для имени группы
-        member_limit=1,
-    )
+    # invite_link = await message.bot.create_chat_invite_link(
+    #     chat_id=GROUP_ID,
+    #     name=l10n.format_value(
+    #         "join_group"
+    #     ),  # Используем локализованный текст для имени группы
+    #     member_limit=1,
+    # )
+    invite_link = ""
     # Локализованный текст для успешной регистрации
     successfully_registered = (
         l10n.format_value("registration_success")
         + "\n\n"
-        + REG_INFO.format(invite_link.invite_link)
+        # + REG_INFO.format(invite_link.invite_link)
+        + REG_INFO.format(invite_link)
     )
-    # await message.answer(successfully_registered, reply_markup=await kb.user_main(l10n))
-    await message.answer(successfully_registered, reply_markup=await kb.user_main())
+    await message.answer(
+        successfully_registered, reply_markup=await kb.user_main(l10n=l10n)
+    )
+    # await message.answer(successfully_registered, reply_markup=await kb.user_main())
 
     # Разбиваем ФИО по пробелам
     name_parts = data["name"].split()
@@ -381,10 +385,10 @@ async def reg_email(message: Message, state: FSMContext, l10n: FluentLocalizatio
     for admin in BOT_ADMINS:
         try:
             await message.bot.send_message(
-                # admin, info_new_user, reply_markup=await kb.create_buttons(l10n=l10n)
                 admin,
                 info_new_user,
-                reply_markup=await kb.create_buttons(),
+                reply_markup=await kb.create_buttons(l10n=l10n),
+                # reply_markup=await kb.create_buttons(),
             )
         except Exception as e:
             await message.bot.send_message(
@@ -403,8 +407,8 @@ async def info(callback: CallbackQuery, l10n: FluentLocalization):
         callback,
         l10n,
         "info_user",  # Ключ для локализованного текста регистрации
-        # reply_markup=await kb.create_buttons(l10n=l10n),
-        reply_markup=await kb.create_buttons(),
+        reply_markup=await kb.create_buttons(l10n=l10n),
+        # reply_markup=await kb.create_buttons(),
     )
 
 

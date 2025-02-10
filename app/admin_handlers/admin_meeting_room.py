@@ -144,6 +144,7 @@ from aiogram import Router, F
 
 # from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import CallbackQuery, Message
+from fluent.runtime import FluentLocalization
 
 import app.admin_kb.keyboards as kb
 import app.user_kb.keyboards as user_kb
@@ -161,7 +162,7 @@ admin_meeting_router.message.filter(IsAdminFilter(is_admin=True))
 admin_meeting_router.callback_query.filter(IsAdminFilter(is_admin=True))
 
 
-async def handle_booking(event, action):
+async def handle_booking(event, action, l10n: FluentLocalization):
     # Получаем ID бронирования
     booking_id = int(
         event.text.split("_")[2]
@@ -212,27 +213,29 @@ async def handle_booking(event, action):
     # Отправляем сообщение админу и пользователю
     # await event.answer(admin_message, reply_markup=await kb.admin_main())
     await event.bot.send_message(
-        user_tg_id, user_message, reply_markup=await user_kb.user_main()
+        user_tg_id, user_message, reply_markup=await user_kb.user_main(l10n=l10n)
     )
 
     # Если событие - CallbackQuery, обновляем текст
     if isinstance(event, CallbackQuery):
-        await event.message.edit_text(admin_message, reply_markup=await kb.admin_main())
+        await event.message.edit_text(
+            admin_message, reply_markup=await kb.admin_main(l10n=l10n)
+        )
     else:
         # await event.bot.delete_message(
         #     chat_id=event.chat.id, message_id=event.message_id - 1
         # )
-        await event.answer(admin_message, reply_markup=await kb.admin_main())
+        await event.answer(admin_message, reply_markup=await kb.admin_main(l10n=l10n))
 
 
 # Хендлеры для подтверждения и отклонения
 @admin_meeting_router.message(F.text.startswith("/approve_booking_"))
 @admin_meeting_router.callback_query(F.data.startswith("approve_booking_"))
-async def approve_booking(event):
-    await handle_booking(event, "approve")
+async def approve_booking(event, l10n: FluentLocalization):
+    await handle_booking(event, "approve", l10n=l10n)
 
 
 @admin_meeting_router.message(F.text.startswith("/reject_booking_"))
 @admin_meeting_router.callback_query(F.data.startswith("reject_booking_"))
-async def reject_booking(event):
-    await handle_booking(event, "reject")
+async def reject_booking(event, l10n: FluentLocalization):
+    await handle_booking(event, "reject", l10n=l10n)

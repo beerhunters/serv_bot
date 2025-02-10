@@ -121,8 +121,8 @@ async def set_visit_date(
             callback,
             l10n,
             "select_time",  # Ключ для локализованного текста регистрации
-            # reply_markup=await kb.time_intervals(selected_date, l10n)
-            reply_markup=await kb.time_intervals(selected_date),
+            reply_markup=await kb.time_intervals(selected_date, l10n=l10n),
+            # reply_markup=await kb.time_intervals(selected_date),
         )
         await state.set_state(RegMeetingRoom.visit_time)
 
@@ -154,8 +154,8 @@ async def process_time_selection(
         callback,
         l10n,
         "select_duration",  # Ключ для локализованного текста регистрации
-        # reply_markup=await kb.duration_options(l10n)
-        reply_markup=await kb.duration_options(),
+        reply_markup=await kb.duration_options(l10n=l10n),
+        # reply_markup=await kb.duration_options(),
     )
     await state.set_state(RegMeetingRoom.duration)
 
@@ -220,8 +220,8 @@ async def change_duration(
 
     # Изменение клавиатуры с актуальным значением длительности
     await callback.message.edit_reply_markup(
-        # reply_markup=await kb.duration_options(current_value, l10n)
-        reply_markup=await kb.duration_options(current_value)
+        reply_markup=await kb.duration_options(current_value=current_value, l10n=l10n)
+        # reply_markup=await kb.duration_options(current_value)
     )
 
 
@@ -346,8 +346,8 @@ async def confirm_duration(
                 admin,
                 booking_text,
                 parse_mode="HTML",
-                # reply_markup=await admin_kb.approval(booking.id, l10n),
-                reply_markup=await admin_kb.approval(booking.id),
+                reply_markup=await admin_kb.approval(booking.id, l10n=l10n),
+                # reply_markup=await admin_kb.approval(booking.id),
             )
 
         # Подтверждение пользователю
@@ -355,8 +355,8 @@ async def confirm_duration(
             callback,
             l10n,
             "request_send",  # Ключ для локализованного текста регистрации
-            # reply_markup=await kb.user_main(l10n)
-            reply_markup=await kb.user_main(),
+            reply_markup=await kb.user_main(l10n=l10n),
+            # reply_markup=await kb.user_main(),
         )
         await state.clear()
     else:
@@ -365,8 +365,8 @@ async def confirm_duration(
             callback,
             l10n,
             "time_is_already_taken",  # Ключ для локализованного текста регистрации
-            # reply_markup=await kb.user_main(l10n)
-            reply_markup=await kb.user_main(),
+            reply_markup=await kb.user_main(l10n=l10n),
+            # reply_markup=await kb.user_main(),
         )
         await state.clear()
 

@@ -4,6 +4,7 @@ from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import CallbackQuery, Message
+from fluent.runtime import FluentLocalization
 
 import app.calendar_keyboard.custom_calendar as cl
 
@@ -38,17 +39,21 @@ class PromoManagement(StatesGroup):
 
 
 @owner_promo_management.callback_query(F.data == "manage_promocodes")
-async def manage_admin(callback: CallbackQuery, state: FSMContext):
+async def manage_admin(
+    callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization
+):
     await state.clear()
     await callback.message.edit_text(
-        text="💠 Выберите действие:", reply_markup=await kb.manage_promo()
+        text="💠 Выберите действие:", reply_markup=await kb.manage_promo(l10n=l10n)
     )
     await callback.answer()
 
 
 @owner_promo_management.callback_query(F.data == "list_promocodes")
 @owner_promo_management.callback_query(F.data.startswith("my_promo_page_"))
-async def list_promocodes(callback: CallbackQuery, state: FSMContext):
+async def list_promocodes(
+    callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization
+):
     await state.clear()
     page = 1  # Стартовая страница
 
@@ -84,10 +89,11 @@ async def list_promocodes(callback: CallbackQuery, state: FSMContext):
             len(promocodes),
             page_size,
             end_index,
+            l10n=l10n,
         )
     else:
         text = "📨 Пу-пу-пу:\n\n" "Промокодов пока нет.. 🤷‍️"
-        keyboard = await kb.owner_main()
+        keyboard = await kb.owner_main(l10n=l10n)
 
     # Сравниваем текст и клавиатуру
     current_message = callback.message.text
@@ -102,7 +108,9 @@ async def list_promocodes(callback: CallbackQuery, state: FSMContext):
 
 @owner_promo_management.callback_query(F.data == "select_promo")
 @owner_promo_management.callback_query(F.data == "delete_promo")
-async def select_promo(callback: CallbackQuery, state: FSMContext):
+async def select_promo(
+    callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization
+):
     data = await state.get_data()
     if callback.data == "select_promo":
         text = "Выберите промокод, который хотели бы изменить: "
@@ -113,14 +121,16 @@ async def select_promo(callback: CallbackQuery, state: FSMContext):
         text = "Выберите промокод, который хотели бы удалить: "
         await state.set_state(PromoManagement.del_promo)
     await callback.message.edit_text(
-        text, reply_markup=await kb.list_promocodes(promocodes)
+        text, reply_markup=await kb.list_promocodes(promocodes, l10n=l10n)
     )
 
 
 @owner_promo_management.callback_query(
     F.data.startswith("promocode_"), PromoManagement.edit_promo
 )
-async def edit_promo(callback: CallbackQuery, state: FSMContext):
+async def edit_promo(
+    callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization
+):
     promocode_id = int(callback.data.split("_")[1])
     promocode = await get_promocode_by_id(promocode_id)
     await state.update_data(
@@ -131,12 +141,14 @@ async def edit_promo(callback: CallbackQuery, state: FSMContext):
     await state.set_state(PromoManagement.select_changes)
     await callback.message.edit_text(
         "Можно продлить или включить/отключить промокод\nВыберите действие:",
-        reply_markup=await kb.promo_changes(promocode.is_active),
+        reply_markup=await kb.promo_changes(promocode.is_active, l10n=l10n),
     )
 
 
 @owner_promo_management.callback_query(F.data == "extend_promo")
-async def extend_promo(callback: CallbackQuery, state: FSMContext):
+async def extend_promo(
+    callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization
+):
     calendar = cl.CustomCalendar()
     await callback.message.edit_text(
         "Выберите дату:",
@@ -150,7 +162,9 @@ async def extend_promo(callback: CallbackQuery, state: FSMContext):
 @owner_promo_management.callback_query(
     F.data.startswith("calendar:"), PromoManagement.expiration_date
 )
-async def set_date(callback: CallbackQuery, state: FSMContext):
+async def set_date(
+    callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization
+):
     # Получение выбранной даты
     calendar = cl.CustomCalendar()
     selected_date = await calendar.handle_callback(
@@ -176,7 +190,7 @@ async def set_date(callback: CallbackQuery, state: FSMContext):
             # Отправляем пользователю сообщение о подтверждении сохранения
             await callback.message.edit_text(
                 f"Вы выбрали дату: {selected_date.strftime('%d.%m.%Y')}. Сохранить?",
-                reply_markup=await kb.save_changes("list_promocodes"),
+                reply_markup=await kb.save_changes("list_promocodes", l10n=l10n),
             )
             await state.set_state(PromoManagement.finish_add_promo)
         else:
@@ -184,7 +198,7 @@ async def set_date(callback: CallbackQuery, state: FSMContext):
             await callback.message.edit_text(
                 "Выбранная дата должна быть больше текущей и больше даты окончания промокода.",
                 reply_markup=await gkb.create_buttons(
-                    back_callback_data="manage_promocodes"
+                    back_callback_data="manage_promocodes", l10n=l10n
                 ),
             )
         await callback.answer()
@@ -193,7 +207,9 @@ async def set_date(callback: CallbackQuery, state: FSMContext):
 @owner_promo_management.callback_query(
     F.data == "save_new_date", PromoManagement.finish_add_promo
 )
-async def save_new_date(callback: CallbackQuery, state: FSMContext):
+async def save_new_date(
+    callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization
+):
     data = await state.get_data()
     selected_date_str = data.get("expiration_date")  # Новая дата
     promocode_id = data.get("promocode_id")  # ID промокода
@@ -203,7 +219,7 @@ async def save_new_date(callback: CallbackQuery, state: FSMContext):
     await update_promocode(promocode_id, new_date=new_expiration_date)
     await callback.message.edit_text(
         f"Дата промокода успешно обновлена на {new_expiration_date.strftime('%d.%m.%Y')}",
-        reply_markup=await kb.owner_main(),
+        reply_markup=await kb.owner_main(l10n=l10n),
     )
     await state.clear()
     await callback.answer()
@@ -212,7 +228,9 @@ async def save_new_date(callback: CallbackQuery, state: FSMContext):
 @owner_promo_management.callback_query(
     F.data.startswith("switch_"), PromoManagement.select_changes
 )
-async def switch_on_off_promo(callback: CallbackQuery, state: FSMContext):
+async def switch_on_off_promo(
+    callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization
+):
     # "switch_off" if is_active else "switch_on"
     status = callback.data.split("_")[1]
     if status == "on":
@@ -227,7 +245,7 @@ async def switch_on_off_promo(callback: CallbackQuery, state: FSMContext):
     # status_text = f"{"+" if new_status else "-"} Статус промокода - {promocode_name} успешно изменен на {"<b>Включен</b>" if new_status else "<b>Выключен</b>"}"
     await callback.message.edit_text(
         status_text,
-        reply_markup=await kb.owner_main(),
+        reply_markup=await kb.owner_main(l10n=l10n),
     )
     await state.clear()
     await callback.answer()
@@ -236,25 +254,29 @@ async def switch_on_off_promo(callback: CallbackQuery, state: FSMContext):
 @owner_promo_management.callback_query(
     F.data.startswith("promocode_"), PromoManagement.del_promo
 )
-async def delete_promo(callback: CallbackQuery, state: FSMContext):
+async def delete_promo(
+    callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization
+):
     promocode_id = int(callback.data.split("_")[1])
     await delete_promocode(promocode_id)
     await callback.message.edit_text(
-        f"👌🏼Промокод успешно удален ❌", reply_markup=await kb.owner_main()
+        f"👌🏼Промокод успешно удален ❌", reply_markup=await kb.owner_main(l10n=l10n)
     )
     await state.clear()
     await callback.answer()
 
 
 @owner_promo_management.callback_query(F.data == "add_promo")
-async def add_promo(callback: CallbackQuery, state: FSMContext):
+async def add_promo(
+    callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization
+):
     # await callback.answer("Функция в разработке", show_alert=True)
     await callback.message.edit_text("Введите название промокода: ")
     await state.set_state(PromoManagement.add_name)
 
 
 @owner_promo_management.message(PromoManagement.add_name)
-async def add_name(message: Message, state: FSMContext):
+async def add_name(message: Message, state: FSMContext, l10n: FluentLocalization):
     promocode_name = message.text
     await state.update_data(promocode_name=promocode_name)
     await message.answer("Введите размер скидки: ")
@@ -262,7 +284,7 @@ async def add_name(message: Message, state: FSMContext):
 
 
 @owner_promo_management.message(PromoManagement.add_discount)
-async def add_discount(message: Message, state: FSMContext):
+async def add_discount(message: Message, state: FSMContext, l10n: FluentLocalization):
     discount = message.text
     await state.update_data(discount=discount)
     calendar = cl.CustomCalendar()
@@ -278,7 +300,9 @@ async def add_discount(message: Message, state: FSMContext):
 @owner_promo_management.callback_query(
     F.data.startswith("calendar:"), PromoManagement.add_date
 )
-async def set_date(callback: CallbackQuery, state: FSMContext):
+async def set_date(
+    callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization
+):
     calendar = cl.CustomCalendar()
     selected_date = await calendar.handle_callback(
         callback, "manage_promocodes", locale="ru"
@@ -298,14 +322,14 @@ async def set_date(callback: CallbackQuery, state: FSMContext):
             )
             await callback.message.edit_text(
                 f"🪄 Промокод {promocode_name} успешно создан!",
-                reply_markup=await kb.owner_main(),
+                reply_markup=await kb.owner_main(l10n=l10n),
             )
         else:
             # Если выбранная дата не соответствует требованиям
             await callback.message.edit_text(
                 "Ошибка",
                 reply_markup=await gkb.create_buttons(
-                    back_callback_data="manage_promocodes"
+                    back_callback_data="manage_promocodes", l10n=l10n
                 ),
             )
         await state.clear()

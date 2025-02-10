@@ -42,7 +42,7 @@
 #
 #
 # @scanner_router.callback_query(F.data == "scan_document")
-# async def start_scanning(callback: CallbackQuery, state: FSMContext):
+# async def start_scanning(callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization):
 #     adjustments = await get_adjustments()
 #     scanning_info = adjustments['scanning_available']
 #     if not scanning_info["state"]:
@@ -54,21 +54,21 @@
 #     if not scanners:
 #         await callback.message.edit_text("Доступных сканеров нет.")
 #         return
-#     await callback.message.edit_text("Выберите сканер для сканирования:", reply_markup=await kb.scan_list(scanners))
+#     await callback.message.edit_text("Выберите сканер для сканирования:", reply_markup=await kb.scan_list(scanners, l10n=l10n))
 #     await state.set_state(ScanStates.waiting_for_scan_selection)
 #
 #
-# async def select_scanner(callback: CallbackQuery, state: FSMContext):
+# async def select_scanner(callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization):
 #     await callback.answer()
 #     scanner_name = callback.data.split(":")[1]
 #     await state.update_data(scanner_name=scanner_name)
 #     await callback.message.edit_text(
 #         f"Вы выбрали сканер: {scanner_name}. Нажмите 'Подтвердить' для начала сканирования.",
-#         reply_markup=confirm_scan_keyboard())
+#         reply_markup=confirm_scan_keyboard(l10n=l10n))
 #     await state.set_state(ScanStates.waiting_for_scan_confirmation)
 #
 #
-# async def confirm_scan(callback: CallbackQuery, bot: Bot, state: FSMContext):
+# async def confirm_scan(callback: CallbackQuery, bot: Bot, state: FSMContext, l10n: FluentLocalization):
 #     await callback.answer()
 #     data = await state.get_data()
 #     scanner_name = data.get("scanner_name")

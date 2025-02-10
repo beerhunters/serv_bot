@@ -63,8 +63,8 @@ async def show_tariffs(
         callback,
         l10n,
         "select_tariff",  # Ключ для локализованного текста регистрации
-        # reply_markup=await kb.tariffs(callback.from_user.id, l10n)
-        reply_markup=await kb.tariffs(callback.from_user.id),
+        reply_markup=await kb.tariffs(callback.from_user.id, l10n=l10n),
+        # reply_markup=await kb.tariffs(callback.from_user.id),
     )
 
 
@@ -338,8 +338,8 @@ async def get_payment(
         await message.answer(
             f"{promocode_text}\n\n"
             f"{l10n.format_value('reservation_successfully_confirmed')}",
-            # reply_markup=await kb.user_main(l10n),
-            reply_markup=await kb.user_main(),
+            reply_markup=await kb.user_main(l10n=l10n),
+            # reply_markup=await kb.user_main(),
         )
         await increment_user_successful_bookings(
             message.from_user.id,
@@ -354,8 +354,8 @@ async def get_payment(
                 admin,
                 booking_text,
                 parse_mode="HTML",
-                # reply_markup=await admin_kb.create_buttons(l10n),
-                reply_markup=await admin_kb.create_buttons(),
+                reply_markup=await admin_kb.create_buttons(l10n=l10n),
+                # reply_markup=await admin_kb.create_buttons(),
             )
         await state.clear()
         return
@@ -380,7 +380,7 @@ async def get_payment(
 
             # Начинаем процесс проверки статуса платежа
             await asyncio.create_task(
-                poll_payment_status(message, promocode_text, state)
+                poll_payment_status(message, promocode_text, state, l10n)
             )
         except Exception:
             await send_localized_message(
@@ -462,8 +462,8 @@ async def poll_payment_status(
                 text=f"{promocode_text}\n\n{l10n.format_value('reservation_successfully_confirmed')}",
                 chat_id=message.chat.id,
                 message_id=payment_message_id,
-                # reply_markup=await kb.user_main(l10n),
-                reply_markup=await kb.user_main(),
+                reply_markup=await kb.user_main(l10n=l10n),
+                # reply_markup=await kb.user_main(),
             )
             await increment_user_successful_bookings(
                 message.from_user.id,
@@ -481,8 +481,8 @@ async def poll_payment_status(
                     admin,
                     booking_text,
                     parse_mode="HTML",
-                    # reply_markup=await admin_kb.create_buttons(l10n),
-                    reply_markup=await admin_kb.create_buttons(),
+                    reply_markup=await admin_kb.create_buttons(l10n=l10n),
+                    # reply_markup=await admin_kb.create_buttons(),
                 )
             await state.clear()
             break

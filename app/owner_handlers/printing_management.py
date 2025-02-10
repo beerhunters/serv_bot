@@ -2,6 +2,7 @@ from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import CallbackQuery, Message
+from fluent.runtime import FluentLocalization
 
 import app.owner_kb.keyboards as kb
 import app.general_keyboards as gkb
@@ -21,7 +22,9 @@ class PrintManagement(StatesGroup):
 
 
 @owner_print_management.callback_query(F.data == "manage_printing")
-async def manage_printing(callback: CallbackQuery, state: FSMContext):
+async def manage_printing(
+    callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization
+):
     await state.clear()
     adjustments = await get_adjustments()
     printing_available = adjustments.get("printing_available")
@@ -35,14 +38,16 @@ async def manage_printing(callback: CallbackQuery, state: FSMContext):
     await callback.message.edit_text(
         text="💠 Выберите действие:",
         reply_markup=await kb.manage_printing(
-            printing_available, scanning_available, free_printing_available
+            printing_available, scanning_available, free_printing_available, l10n=l10n
         ),
     )
     await callback.answer()
 
 
 @owner_print_management.callback_query(F.data.startswith("toggle_"))
-async def toggle_feature(callback: CallbackQuery, state: FSMContext):
+async def toggle_feature(
+    callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization
+):
     data = await state.get_data()
     feature_map = {
         "toggle_printing": "printing_available",
@@ -73,20 +78,24 @@ async def toggle_feature(callback: CallbackQuery, state: FSMContext):
     await callback.message.edit_text(
         f"{status_message}\n",
         # reply_markup=await kb.back_button("manage_printing")
-        reply_markup=await gkb.create_buttons(back_callback_data="manage_printing"),
+        reply_markup=await gkb.create_buttons(
+            back_callback_data="manage_printing", l10n=l10n
+        ),
     )
     await callback.answer()
 
 
 @owner_print_management.callback_query(F.data == "change_price_printing")
-async def change_price(callback: CallbackQuery, state: FSMContext):
+async def change_price(
+    callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization
+):
     await state.set_state(PrintManagement.price)
     await callback.message.edit_text("💠 Введите новую стоимость печати:")
     await state.set_state(PrintManagement.new_price)
 
 
 @owner_print_management.message(PrintManagement.new_price)
-async def set_new_price(message: Message, state: FSMContext):
+async def set_new_price(message: Message, state: FSMContext, l10n: FluentLocalization):
     try:
         new_price = int(message.text)
     except ValueError:
@@ -95,6 +104,8 @@ async def set_new_price(message: Message, state: FSMContext):
     await update_adjustment(name="printing_available", value=new_price)
     await message.answer(
         "🟢 Стоимость печати изменена!",
-        reply_markup=await gkb.create_buttons(back_callback_data="manage_printing"),
+        reply_markup=await gkb.create_buttons(
+            back_callback_data="manage_printing", l10n=l10n
+        ),
     )
     await state.clear()

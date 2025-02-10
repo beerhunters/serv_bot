@@ -197,7 +197,7 @@ async def delete_location(session, location_id):
 
 
 @connection
-async def create_ticket(session, tg_id, description, location_id, photo_id):
+async def create_ticket(session, reg_time, tg_id, description, location_id, photo_id):
     user = await session.scalar(select(User).where(User.tg_id == tg_id))
     location = await session.scalar(select(Location).where(Location.id == location_id))
 
@@ -205,6 +205,7 @@ async def create_ticket(session, tg_id, description, location_id, photo_id):
         raise ValueError("User or location not found.")
 
     new_ticket = Ticket(
+        reg_time=reg_time,
         user=user,  # Передаем объект User
         description=description,
         location=location,  # Передаем объект Location
