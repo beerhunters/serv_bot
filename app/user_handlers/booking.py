@@ -191,7 +191,7 @@ async def set_promocode(message: Message, state: FSMContext, l10n: FluentLocaliz
             promocode_id=promocode_id,
             promocode_name=entered_promocode,
         )
-        promocode_text = f"{l10n.format_value("promo_accepted")} {promocode_discount}%!"
+        promocode_text = f"{l10n.format_value('promo_accepted')} {promocode_discount}%!"
         await state.set_state(BookingTariff.payment)
         await get_payment(message, promocode_text, state, l10n)
     else:
