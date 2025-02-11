@@ -148,7 +148,7 @@ async def reg_email(message: Message, state: FSMContext, l10n: FluentLocalizatio
         member_limit=1,
     )
     # invite_link = ""
-    successfully_registered = f"{l10n.format_value("registration_success")}\n\n"
+    successfully_registered = f"{l10n.format_value('registration_success')}\n\n"
     successfully_registered += l10n.format_value(
         "registration_info", {"invite_link": invite_link}
     )
