@@ -449,10 +449,31 @@ async def edit_user_visits(
     await state.clear()
 
 
+# @owner_users_management.message(F.text.startswith("/delete_user_"))
+# @owner_users_management.callback_query(F.data.startswith("delete_user_"))
+# async def delete_user(event, state: FSMContext, l10n: FluentLocalization):
+#     if isinstance(event, CallbackQuery):
+#         user_id = event.data.split("_")[2]
+#         await state.update_data(user_id=user_id)
+#         await delete_user_from_db(user_id)
+#         await event.message.edit_text(
+#             "Пользователь успешно удален.", reply_markup=await kb.owner_main(l10n=l10n)
+#         )
+#         await event.answer()
+#     elif isinstance(event, Message):
+#         user_id = event.text.split("_")[2]
+#         await state.update_data(user_id=user_id)
+#         await delete_user_from_db(user_id)
+#         await event.bot.delete_message(
+#             chat_id=event.chat.id, message_id=event.message_id - 1
+#         )
+#         # Удаляем сообщение перед ответом
+#         await event.delete()
+#         await event.answer(
+#             "Пользователь успешно удален.", reply_markup=await kb.owner_main(l10n=l10n)
+#         )
+#     await state.clear()
 @owner_users_management.message(F.text.startswith("/delete_user_"))
-# @owner_users_management.message(
-#     F.text.startswith("/delete_user_"), UsersManagement.search_name
-# )
 @owner_users_management.callback_query(F.data.startswith("delete_user_"))
 async def delete_user(event, state: FSMContext, l10n: FluentLocalization):
     if isinstance(event, CallbackQuery):
@@ -467,10 +488,19 @@ async def delete_user(event, state: FSMContext, l10n: FluentLocalization):
         user_id = event.text.split("_")[2]
         await state.update_data(user_id=user_id)
         await delete_user_from_db(user_id)
-        await event.bot.delete_message(
-            chat_id=event.chat.id, message_id=event.message_id - 1
-        )
-        # Удаляем сообщение перед ответом
+
+        # Проверяем, существует ли сообщение, прежде чем удалять
+        try:
+            # Пытаемся удалить предыдущее сообщение
+            await event.bot.delete_message(
+                chat_id=event.chat.id, message_id=event.message_id - 1
+            )
+        except Exception as e:
+            # Логируем ошибку или обрабатываем ситуацию
+            # print(f"Ошибка при удалении сообщения: {e}")
+            pass
+
+        # Удаляем текущее сообщение
         await event.delete()
         await event.answer(
             "Пользователь успешно удален.", reply_markup=await kb.owner_main(l10n=l10n)
