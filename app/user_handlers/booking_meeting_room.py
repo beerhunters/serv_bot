@@ -13,13 +13,8 @@ import app.calendar_keyboard.custom_calendar as cl
 from app.database.requests import (
     get_user_by_tg_id,
     is_time_available,
-    # add_meeting_room_booking,
-    # update_booking_mr_rubitime,
-    # get_all_spaces,
-    # get_space_by_id,
     get_tariff_by_id,
     create_booking,
-    update_booking_fields,
 )
 from app.rubitime import rubitime
 from app.user_handlers.booking import BookingTariff
@@ -34,7 +29,6 @@ meeting_room_router.callback_query.filter(IsUserFilter(is_user=True))
 
 
 class RegMeetingRoom(StatesGroup):
-    # space = State()
     visit_date = State()
     visit_time = State()
     duration = State()
@@ -120,9 +114,8 @@ async def set_visit_date(
         await send_localized_message(
             callback,
             l10n,
-            "select_time",  # Ключ для локализованного текста регистрации
+            "select_time",
             reply_markup=await kb.time_intervals(selected_date, l10n=l10n),
-            # reply_markup=await kb.time_intervals(selected_date),
         )
         await state.set_state(RegMeetingRoom.visit_time)
 
@@ -153,9 +146,8 @@ async def process_time_selection(
     await send_localized_message(
         callback,
         l10n,
-        "select_duration",  # Ключ для локализованного текста регистрации
+        "select_duration",
         reply_markup=await kb.duration_options(l10n=l10n),
-        # reply_markup=await kb.duration_options(),
     )
     await state.set_state(RegMeetingRoom.duration)
 
@@ -210,7 +202,7 @@ async def change_duration(
         await send_localized_message(
             callback,
             l10n,
-            "error_duration",  # Ключ для локализованного текста регистрации
+            "error_duration",
             show_alert=True,
         )
         return
@@ -221,7 +213,6 @@ async def change_duration(
     # Изменение клавиатуры с актуальным значением длительности
     await callback.message.edit_reply_markup(
         reply_markup=await kb.duration_options(current_value=current_value, l10n=l10n)
-        # reply_markup=await kb.duration_options(current_value)
     )
 
 
@@ -347,16 +338,13 @@ async def confirm_duration(
                 booking_text,
                 parse_mode="HTML",
                 reply_markup=await admin_kb.approval(booking.id, l10n=l10n),
-                # reply_markup=await admin_kb.approval(booking.id),
             )
-
         # Подтверждение пользователю
         await send_localized_message(
             callback,
             l10n,
             "request_send",  # Ключ для локализованного текста регистрации
             reply_markup=await kb.user_main(l10n=l10n),
-            # reply_markup=await kb.user_main(),
         )
         await state.clear()
     else:
@@ -366,7 +354,6 @@ async def confirm_duration(
             l10n,
             "time_is_already_taken",  # Ключ для локализованного текста регистрации
             reply_markup=await kb.user_main(l10n=l10n),
-            # reply_markup=await kb.user_main(),
         )
         await state.clear()
 
