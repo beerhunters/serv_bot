@@ -6,7 +6,7 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.filters import CommandStart, Command
 from fluent.runtime import FluentLocalization
 
-from app.database.requests import update_language_code
+# from app.database.requests import update_language_code
 from config import GREETINGS_OWNER, INFO_OWNER
 from filters import IsOwnerFilter
 

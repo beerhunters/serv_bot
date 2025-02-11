@@ -26,14 +26,6 @@ class UserTicket(StatesGroup):
     photo = State()
 
 
-#
-# @ticket_router.callback_query(F.data == "helpdesk")
-# async def helpdesk(callback: CallbackQuery, state: FSMContext):
-#     await callback.message.edit_text(
-#         f"Выберите пункт меню: \n", reply_markup=await kb.tickets_menu()
-#     )
-#     await callback.answer()
-#     # await state.set_state(UserTicket.description)
 @ticket_router.callback_query(F.data == "helpdesk")
 async def helpdesk(
     callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization
@@ -41,19 +33,11 @@ async def helpdesk(
     await send_localized_message(
         callback,
         l10n,
-        "helpdesk_menu",  # Ключ для локализованного текста регистрации
+        "helpdesk_menu",
         reply_markup=await kb.tickets_menu(l10n=l10n),
-        # reply_markup=await kb.tickets_menu(),
     )
 
 
-# @ticket_router.callback_query(F.data == "new_ticket")
-# async def new_ticket(callback: CallbackQuery, state: FSMContext):
-#     await callback.message.edit_text(
-#         f"Отправьте запрос или опишите проблему\n\n"
-#         f"Для отмены используйте команду /cancel."
-#     )
-#     await state.set_state(UserTicket.description)
 @ticket_router.callback_query(F.data == "new_ticket")
 async def new_ticket(
     callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization
@@ -61,16 +45,11 @@ async def new_ticket(
     await send_localized_message(
         callback,
         l10n,
-        "new_ticket",  # Ключ для локализованного текста регистрации
+        "new_ticket",
     )
     await state.set_state(UserTicket.description)
 
 
-# @ticket_router.message(UserTicket.description)
-# async def set_description(message: Message, state: FSMContext):
-#     await state.update_data(description=message.text)
-#     await state.set_state(UserTicket.location)
-#     await message.answer("Выберите местоположение:", reply_markup=await kb.locations())
 @ticket_router.message(UserTicket.description)
 async def set_description(
     message: Message, state: FSMContext, l10n: FluentLocalization
@@ -80,20 +59,11 @@ async def set_description(
     await send_localized_message(
         message,
         l10n,
-        "ticket_location",  # Ключ для локализованного текста регистрации
+        "ticket_location",
         reply_markup=await kb.locations(l10n=l10n),
-        # reply_markup=await kb.locations(),
     )
 
 
-# @ticket_router.callback_query(F.data.startswith("location_"), UserTicket.location)
-# async def set_location(callback: CallbackQuery, state: FSMContext):
-#     await callback.answer("Выбор сделан.")
-#     await state.update_data(location_id=callback.data.split("_")[1])
-#     await state.set_state(UserTicket.photo)
-#     await callback.message.edit_text(
-#         "Отправьте фото, связанное с проблемой, либо нажмите /skip_photo."
-#     )
 @ticket_router.callback_query(F.data.startswith("location_"), UserTicket.location)
 async def set_location(
     callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization
@@ -101,67 +71,18 @@ async def set_location(
     await send_localized_message(
         callback,
         l10n,
-        "location_confirmed",  # Ключ для локализованного текста регистрации
-        show_alert=True,  # Показывать уведомление пользователю
+        "location_confirmed",
+        show_alert=True,
     )
     await state.update_data(location_id=callback.data.split("_")[1])
     await state.set_state(UserTicket.photo)
     await send_localized_message(
         callback,
         l10n,
-        "ticket_photo",  # Ключ для локализованного текста регистрации
+        "ticket_photo",
     )
 
 
-# @ticket_router.message(UserTicket.photo)
-# async def set_photo(message: Message, state: FSMContext):
-#     if message.text == "/skip_photo":
-#         await state.update_data(photo_id=None)
-#     elif message.photo:
-#         file_id = message.photo[-1].file_id
-#         await state.update_data(photo_id=file_id)
-#     else:
-#         await message.answer(
-#             "Пожалуйста, отправьте фото или используйте команду /skip_photo."
-#         )
-#         return
-#
-#     data = await state.get_data()
-#     ticket = await create_ticket(
-#         tg_id=message.chat.id,
-#         description=data["description"],
-#         location_id=data["location_id"],
-#         photo_id=data["photo_id"],
-#     )
-#     await message.answer(
-#         "Ваш запрос успешно отправлен.", reply_markup=await kb.user_main()
-#     )
-#     ticket_text = (
-#         f"📬❗️\nПользователь {ticket.user.tg_username} создал новую заявку <code>#{ticket.id}</code>.\n\n"
-#         f"<b>Сообщение от пользователя:</b>\n <em>{ticket.description}</em>\n\n"
-#         f"<b>ФИО:</b> {ticket.user.name}\n"
-#         f"<b>Телефон для связи:</b> {ticket.user.contact}\n"
-#         f"<b>Расположение:</b> {ticket.location.name}\n"
-#     )
-#     await state.clear()
-#     for admin in BOT_ADMINS:
-#         if data["photo_id"] is not None:
-#             await message.bot.send_photo(
-#                 admin,
-#                 caption=ticket_text,
-#                 photo=data["photo_id"],
-#                 show_caption_above_media=True,
-#                 # reply_markup=await admin_kb.back_button("all_tasks"),
-#                 reply_markup=await admin_kb.accept_ticket(),
-#             )
-#         else:
-#             await message.bot.send_message(
-#                 admin,
-#                 ticket_text,
-#                 # reply_markup=await admin_kb.back_button("all_tasks"),
-#                 reply_markup=await admin_kb.accept_ticket(),
-#                 parse_mode="HTML",
-#             )
 @ticket_router.message(UserTicket.photo)
 async def set_photo(message: Message, state: FSMContext, l10n: FluentLocalization):
     if message.text == "/skip_photo":
@@ -173,7 +94,7 @@ async def set_photo(message: Message, state: FSMContext, l10n: FluentLocalizatio
         await send_localized_message(
             message,
             l10n,
-            "ticket_photo",  # Ключ для локализованного текста регистрации
+            "ticket_photo",
         )
         return
 
@@ -189,9 +110,8 @@ async def set_photo(message: Message, state: FSMContext, l10n: FluentLocalizatio
     await send_localized_message(
         message,
         l10n,
-        "ticket_send",  # Ключ для локализованного текста регистрации
+        "ticket_send",
         reply_markup=await kb.user_main(l10n=l10n),
-        # reply_markup=await kb.user_main(),
     )
     # ticket_text = (
     #     f"📬❗️\n{l10n.format_value('user_msg')} {ticket.user.tg_username} {l10n.format_value('create_msg')} <code>#{ticket.id}</code>.\n\n"
@@ -216,16 +136,12 @@ async def set_photo(message: Message, state: FSMContext, l10n: FluentLocalizatio
                 photo=data["photo_id"],
                 show_caption_above_media=True,
                 reply_markup=await admin_kb.admin_main(l10n=l10n),
-                # reply_markup=await admin_kb.accept_ticket(l10n=l10n),
-                # reply_markup=await admin_kb.accept_ticket(),
             )
         else:
             await message.bot.send_message(
                 admin,
                 ticket_text,
                 reply_markup=await admin_kb.admin_main(l10n=l10n),
-                # reply_markup=await admin_kb.accept_ticket(l10n=l10n),
-                # reply_markup=await admin_kb.accept_ticket(),
                 parse_mode="HTML",
             )
 
@@ -318,7 +234,6 @@ async def all_tickets(callback: CallbackQuery, l10n: FluentLocalization):
     else:
         text = l10n.format_value("empty_history")
         keyboard = await kb.user_main(l10n=l10n)
-        # keyboard = await kb.user_main()
 
     # Сравниваем текст и клавиатуру
     current_message = callback.message.text
