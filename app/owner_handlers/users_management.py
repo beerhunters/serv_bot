@@ -526,7 +526,8 @@ async def display_users(
                 f" ├ <em>🎟️ TG: </em>{user.tg_username} / <code>{user.tg_id}</code>\n"
                 f" ├ <em>☎️ Телефон: </em>{user.contact}\n"
                 f" ├ <em>📨 Email: </em>{user.email}\n"
-                f" └ <em>🗓️ Посещения: </em>{user.successful_bookings}\n"
+                f" ├ <em>🗓️ Посещения: </em>{user.successful_bookings}\n"
+                f" └ <em>{'🇷🇺' if user.language_code == 'ru' else '🇺🇸'} Язык: </em>{user.language_code}\n"
                 f"<em>🪄️ Редактировать: </em>/edit_user_{user.id}\n"
                 f"<em>❌ Удалить: </em>/delete_user_{user.id}\n\n"
             )

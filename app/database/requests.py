@@ -117,6 +117,22 @@ async def get_all_users(session):
 
 
 @connection
+async def update_language_code(session):
+    # Получаем всех пользователей
+    result = await session.execute(select(User))
+    users = result.scalars().all()  # Извлекаем список пользователей
+
+    # Проходим по всем пользователям и обновляем поле language_code
+    for user in users:
+        user.language_code = "ru"  # Пример: устанавливаем язык на русский
+
+    # Проводим сессии и коммитим изменения
+    await session.commit()
+
+    print(f"Language code updated for {len(users)} users.")
+
+
+@connection
 async def delete_user_from_db(session, user_id):
     stmt = select(User).where(User.id == user_id)
     result = await session.execute(stmt)

@@ -284,6 +284,62 @@ async def complete_ticket(
     await state.clear()
 
 
+# @admin_ticket_router.callback_query(F.data == "close_ticket")
+# async def complete_ticket(
+#         callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization
+# ):
+#     data = await state.get_data()
+#     ticket_id = data.get("ticket_id")
+#     reg_time = data.get("reg_time")
+#     ticket_comm = data.get("ticket_comm")
+#     finish_time = datetime.datetime.now().replace(microsecond=0)
+#     finish_photo_id = data.get("finish_photo_id")
+#     time_spent = int((finish_time - reg_time).total_seconds())
+#     await update_ticket_fields(
+#         ticket_id,
+#         state=1,
+#         ticket_comm=ticket_comm,
+#         finish_time=finish_time,
+#         finish_photo_id=finish_photo_id,
+#         time_spent=time_spent,
+#     )
+#     task = await get_ticket_by_id(ticket_id)
+#
+#     # Получаем язык пользователя (если оно есть в объекте user)
+#     user_language = task.user.language_code if hasattr(task.user, 'language_code') else "ru"
+#
+#     # Загружаем локализацию
+#     user_l10n = get_fluent_localization(user_language[:2])  # Используем язык пользователя или язык по умолчанию
+#
+#     await callback.message.edit_text(
+#         f"🎉 Заявка #{ticket_id} успешно завершена! 🎉",
+#         parse_mode="HTML",
+#         reply_markup=await kb.admin_main(l10n=user_l10n),
+#     )
+#
+#     completion_message = (
+#         f"🎉 {user_l10n.format_value('t_task')} <code>#{ticket_id}</code> {user_l10n.format_value('t_complete')}\n"
+#         f"<b>{user_l10n.format_value('t_answer')}</b> - <em>{task.ticket_comm}</em>\n\n"
+#         f"<em>{user_l10n.format_value('t_check')}</em>"
+#     )
+#     if finish_photo_id:
+#         await callback.message.bot.send_photo(
+#             chat_id=task.user.tg_id,
+#             photo=finish_photo_id,
+#             caption=completion_message,
+#             show_caption_above_media=True,
+#             reply_markup=await user_kb.create_buttons(l10n=user_l10n),
+#         )
+#     else:
+#         await callback.message.bot.send_message(
+#             chat_id=task.user.tg_id,
+#             text=completion_message,
+#             reply_markup=await user_kb.create_buttons(l10n=user_l10n),
+#             parse_mode="HTML",
+#         )
+#     await state.clear()
+
+
 @admin_ticket_router.callback_query(F.data == "all_my_tickets")
 async def all_my_tickets(
     callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization

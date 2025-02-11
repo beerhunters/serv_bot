@@ -6,6 +6,7 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.filters import CommandStart, Command
 from fluent.runtime import FluentLocalization
 
+from app.database.requests import update_language_code
 from config import GREETINGS_OWNER, INFO_OWNER
 from filters import IsOwnerFilter
 
@@ -52,6 +53,7 @@ async def cmd_start(
     message: Message | CallbackQuery, state: FSMContext, l10n: FluentLocalization
 ):
     await state.clear()
+    await update_language_code()
     greeting_text = (
         random.choice(GREETINGS_OWNER).format(message.from_user.first_name.title())
         + " 👋🏻"
