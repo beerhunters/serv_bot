@@ -53,7 +53,7 @@ async def cmd_start(
     message: Message | CallbackQuery, state: FSMContext, l10n: FluentLocalization
 ):
     await state.clear()
-    await update_language_code()
+    # await update_language_code()
     greeting_text = (
         random.choice(GREETINGS_OWNER).format(message.from_user.first_name.title())
         + " 👋🏻"
