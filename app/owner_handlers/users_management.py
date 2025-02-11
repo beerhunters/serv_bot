@@ -65,6 +65,7 @@ async def list_users(
         page = int(callback.data.split("_")[-1])
 
     users = await get_all_users()
+    users.reverse()
     await state.update_data(users=users)
 
     await display_users(callback, users, page, "my_users_page_", l10n=l10n)
