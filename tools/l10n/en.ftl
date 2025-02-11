@@ -24,14 +24,15 @@ registration_success = ✨Registration completed successfully!✨
 not_provided = Not provided
 join_group = Join group
 
-new_resident = New Resident ✅
-user_data = User Information
-last_name = Last Name
-first_name = First Name
-middle_name = Middle Name
-tg_username = Telegram
-phone = Phone
-email = Email
+new_resident = <b>👤 New Resident ✅ ✅</b>
+user_data = <b>📋 User Information:</b>
+last_name = Last Name: <code>{$last_name}</code>
+first_name = First Name: <code>{$first_name}</code>
+middle_name = Middle Name: <code>{$middle_name}</code>
+tg_username = <b>🎟️ Telegram: </b>{$tg_username}
+phone =  <b>☎️ Phone: </b><code>{$contact}</code>
+email = <b>📨 Email: </b><code>{$email}</code>
+
 admin_error = Error sending message to administrator
 error_message = Error message
 

@@ -24,14 +24,15 @@ registration_success = ✨Вы успешно прошли регистраци�
 not_provided = Не указано
 join_group = Вступить в группу
 
-new_resident = Новый резидент ✅
-user_data = Данные пользователя
-last_name = Фамилия
-first_name = Имя
-middle_name = Отчество
-tg_username = TG
-phone = Телефон
-email = Email
+new_resident = <b>👤 Новый резидент ✅ ✅</b>
+user_data = <b>📋 Данные пользователя:</b>
+last_name = Фамилия: <code>{$last_name}</code>
+first_name = Имя: <code>{$first_name}</code>
+middle_name = Отчество: <code>{$middle_name}</code>
+tg_username = <b>🎟️ TG: </b>{$tg_username}
+phone =  <b>☎️ Телефон: </b><code>{$contact}</code>
+email = <b>📨 Email: </b><code>{$email}</code>
+
 admin_error = Ошибка отправки сообщения администратору
 error_message = Сообщение об ошибке
 
