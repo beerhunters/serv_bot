@@ -147,11 +147,10 @@ async def reg_email(message: Message, state: FSMContext, l10n: FluentLocalizatio
         ),  # Используем локализованный текст для имени группы
         member_limit=1,
     )
-    # Локализованный текст для успешной регистрации
-    successfully_registered = (
-        l10n.format_value("registration_success")
-        + "\n\n"
-        + REG_INFO.format(invite_link.invite_link)
+    # invite_link = ""
+    successfully_registered = f"{l10n.format_value("registration_success")}\n\n"
+    successfully_registered += l10n.format_value(
+        "registration_info", {"invite_link": invite_link}
     )
     # successfully_registered = "Ok"
     await message.answer(

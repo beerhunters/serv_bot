@@ -21,6 +21,14 @@ info_user = 💼 <b>PARTA Bot</b> for your convenience!
             🔔 <b>Subscribe to our news channel</b>: <a href="https://t.me/partacowo">Our Channel</a>
 
 registration_success = ✨Registration completed successfully!✨
+registration_info = 💼 <b>PARTA Bot</b> for your convenience!
+
+                    <u>🛜 WiFi Network: <b>Parta</b> Password:</u> <code>Parta2024</code>
+
+                    🔔 <b>Join our group</b>: <a href="{$invite_link}">PARTA COMMUNITY</a>
+
+                    🔔 <b>Also, subscribe to our news channel</b> to stay up to date with the latest updates and promotions: https://t.me/partacowo
+
 not_provided = Not provided
 join_group = Join group
 
