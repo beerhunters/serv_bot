@@ -18,8 +18,7 @@ from app.database.requests import (
     search_users_by_phone,
     get_user_by_id,
     update_user_fields,
-    delete_user,
-    # add_at_symbol_to_usernames,
+    delete_user_from_db,
 )
 from filters import IsOwnerFilter
 
@@ -209,6 +208,7 @@ async def search_name(message_or_callback, state: FSMContext, l10n: FluentLocali
         await display_users(
             message_or_callback, users, page, "search_users_page_", l10n=l10n
         )
+        await state.clear()
     else:
         await message_or_callback.answer(
             "❗ Совпадения не найдены.", reply_markup=await kb.owner_main(l10n=l10n)
@@ -450,12 +450,15 @@ async def edit_user_visits(
 
 
 @owner_users_management.message(F.text.startswith("/delete_user_"))
+@owner_users_management.message(
+    F.text.startswith("/delete_user_"), UsersManagement.search_name
+)
 @owner_users_management.callback_query(F.data.startswith("delete_user_"))
 async def delete_user(event, state: FSMContext, l10n: FluentLocalization):
     if isinstance(event, CallbackQuery):
         user_id = event.data.split("_")[2]
         await state.update_data(user_id=user_id)
-        await delete_user(user_id)
+        await delete_user_from_db(user_id)
         await event.message.edit_text(
             "Пользователь успешно удален.", reply_markup=await kb.owner_main(l10n=l10n)
         )
@@ -463,7 +466,7 @@ async def delete_user(event, state: FSMContext, l10n: FluentLocalization):
     elif isinstance(event, Message):
         user_id = event.text.split("_")[2]
         await state.update_data(user_id=user_id)
-        await delete_user(user_id)
+        await delete_user_from_db(user_id)
         await event.bot.delete_message(
             chat_id=event.chat.id, message_id=event.message_id - 1
         )

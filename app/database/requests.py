@@ -117,7 +117,7 @@ async def get_all_users(session):
 
 
 @connection
-async def delete_user(session, user_id):
+async def delete_user_from_db(session, user_id):
     stmt = select(User).where(User.id == user_id)
     result = await session.execute(stmt)
     user = result.scalars().first()
