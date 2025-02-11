@@ -91,14 +91,14 @@ async def count_pdf_pages(pdf_file_path):
 async def printing_cost(message, pdf_file_path):
     adjustments = await get_adjustments()
     printing_info = adjustments.get("printing_available")
-    try:
-        page_count = await count_pdf_pages(pdf_file_path)
-        print_price = printing_info["value"]
-        total_cost = page_count * print_price
-        return page_count, total_cost
-    except Exception as e:
-        await message.reply(f"Произошла ошибка при подсчете страниц PDF: {e}")
-        return
+    # try:
+    page_count = await count_pdf_pages(pdf_file_path)
+    print_price = printing_info["value"]
+    total_cost = page_count * print_price
+    return page_count, total_cost
+    # except Exception as e:
+    #     await message.reply(f"Произошла ошибка при подсчете страниц PDF: {e}")
+    #     return
 
 
 printer_manager = PrinterManager()
@@ -205,67 +205,68 @@ async def print_docs_photo(
         await message.reply("Произошла ошибка при сохранении файла.")
         return
 
-    try:
-        if not temp_file_path.endswith(".pdf"):
-            await convert_to_pdf(temp_file_path, pdf_file_path)
-        else:
-            pdf_file_path = temp_file_path
+    # try:
+    if not temp_file_path.endswith(".pdf"):
+        await convert_to_pdf(temp_file_path, pdf_file_path)
+    else:
+        pdf_file_path = temp_file_path
 
-        if free_printing_info["state"] or printing_info["value"] == 0:
-            job_id = await print_file(pdf_file_path, printer_name)
-            await state.update_data(job_id=job_id)
-            await message.reply(
-                f"Ваш файл был отправлен на печать на принтер: {printer_name.replace('_', ' ')}."
-                f"\nПожалуйста, подождите..."
+    if free_printing_info["state"] or printing_info["value"] == 0:
+        job_id = await print_file(pdf_file_path, printer_name)
+        await state.update_data(job_id=job_id)
+        await message.reply(
+            f"Ваш файл был отправлен на печать на принтер: {printer_name.replace('_', ' ')}."
+            f"\nПожалуйста, подождите..."
+        )
+        await asyncio.create_task(
+            check_print_status(
+                message, message.chat.id, job_id, printer_name, l10n=l10n
             )
-            await asyncio.create_task(
-                check_print_status(
-                    message, message.chat.id, job_id, printer_name, l10n=l10n
-                )
-            )
-            await state.clear()
-        else:
-            try:
-                page_count, total_cost = await printing_cost(message, pdf_file_path)
+        )
+        await state.clear()
+    else:
+        # try:
+        page_count, total_cost = await printing_cost(message, pdf_file_path)
 
-                payment_id, confirmation_url = await create_payment(
-                    f"Печать документа {document.file_name} на {page_count} страниц",
-                    amount=total_cost,
-                )
-            except Exception as e:
-                await message.reply(f"Произошла ошибка при создании платежа: {e}")
-                return
+        payment_id, confirmation_url = await create_payment(
+            f"Печать документа {document.file_name} на {page_count} страниц",
+            amount=total_cost,
+            l10n=l10n,
+        )
+        # except Exception as e:
+        #     await message.reply(f"Произошла ошибка при создании платежа: {e}")
+        #     return
 
-            await state.update_data(
-                payment_id=payment_id,
-                temp_file_path=pdf_file_path,
-                document_file_name=document.file_name,
-                total_cost=total_cost,
-            )
-            payment_message = await message.reply(
-                f"Пожалуйста, оплатите печать ({total_cost} руб.), нажав на кнопку ниже.",
-                reply_markup=await kb.payment(
-                    confirmation_url, amount=total_cost, l10n=l10n
-                ),
-            )
-            await state.update_data(payment_message_id=payment_message.message_id)
-            await state.set_state(Printer.payment)
+        await state.update_data(
+            payment_id=payment_id,
+            temp_file_path=pdf_file_path,
+            document_file_name=document.file_name,
+            total_cost=total_cost,
+        )
+        payment_message = await message.reply(
+            f"Пожалуйста, оплатите печать ({total_cost} руб.), нажав на кнопку ниже.",
+            reply_markup=await kb.payment(
+                confirmation_url, amount=total_cost, l10n=l10n
+            ),
+        )
+        await state.update_data(payment_message_id=payment_message.message_id)
+        await state.set_state(Printer.payment)
 
-            # Начинаем процесс проверки статуса платежа
-            await asyncio.create_task(poll_payment_status(message, state))
-    except Exception as e:
-        await message.reply(f"Произошла ошибка при обработке файла: {e}")
-        return
+        # Начинаем процесс проверки статуса платежа
+        await asyncio.create_task(poll_payment_status(message, state, l10n=l10n))
+    # except Exception as e:
+    #     await message.reply(f"Произошла ошибка при обработке файла: {e}")
+    #     return
 
 
 async def check_payment_status(payment_id: str) -> bool:
     loop = asyncio.get_event_loop()
-    try:
-        # Запускаем синхронный метод в пуле потоков
-        payment = await loop.run_in_executor(executor, Payment.find_one, payment_id)
-        return payment.status == "succeeded"
-    except Exception as e:
-        return False
+    # try:
+    # Запускаем синхронный метод в пуле потоков
+    payment = await loop.run_in_executor(executor, Payment.find_one, payment_id)
+    return payment.status == "succeeded"
+    # except Exception as e:
+    #     return False
 
 
 async def poll_payment_status(
