@@ -479,19 +479,19 @@ async def set_visit_date(
         user = await get_user_by_tg_id(user_id)
 
         # Сохраняем каждого гостя в базу данных
-        try:
-            for guest in guests:
-                await create_guest(
-                    user_id, guest["name"], guest["phone"], office_number, visit_date
-                )
-        except Exception:
-            await send_localized_message(
-                callback,
-                l10n,
-                "msg_error_saving_guest",  # Ключ для локализованного текста регистрации
-                show_alert=True,
+        # try:
+        for guest in guests:
+            await create_guest(
+                user_id, guest["name"], guest["phone"], office_number, visit_date
             )
-            return
+        # except Exception:
+        #     await send_localized_message(
+        #         callback,
+        #         l10n,
+        #         "msg_error_saving_guest",  # Ключ для локализованного текста регистрации
+        #         show_alert=True,
+        #     )
+        #     return
         if int(office_number) == 0:
             office_text = office_for_msg
         else:
@@ -520,17 +520,17 @@ async def set_visit_date(
                 )
 
         # Отправляем сообщение администраторам
-        try:
-            for admin in BOT_ADMINS:
-                await callback.bot.send_message(admin, guest_text, parse_mode="HTML")
-        except Exception:
-            await send_localized_message(
-                callback,
-                l10n,
-                "msg_error_sending_request",  # Ключ для локализованного текста регистрации
-                show_alert=True,
-            )
-            return
+        # try:
+        for admin in BOT_ADMINS:
+            await callback.bot.send_message(admin, guest_text, parse_mode="HTML")
+        # except Exception:
+        #     await send_localized_message(
+        #         callback,
+        #         l10n,
+        #         "msg_error_sending_request",  # Ключ для локализованного текста регистрации
+        #         show_alert=True,
+        #     )
+        #     return
         await send_localized_message(
             callback,
             l10n,
