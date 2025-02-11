@@ -38,7 +38,7 @@ class User(Base):
     contact: Mapped[str] = mapped_column(String(20), nullable=True)
     email: Mapped[str] = mapped_column(String(20), nullable=True)
     successful_bookings: Mapped[int] = mapped_column(Integer, default=0)
-    # language_code: Mapped[str] = mapped_column(String(20), nullable=True, default="ru")
+    language_code: Mapped[str] = mapped_column(String(20), nullable=True, default="ru")
 
     # Добавляем отношение с таблицей
     tickets: Mapped[list["Ticket"]] = relationship("Ticket", back_populates="user")
