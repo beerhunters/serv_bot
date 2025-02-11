@@ -450,9 +450,9 @@ async def edit_user_visits(
 
 
 @owner_users_management.message(F.text.startswith("/delete_user_"))
-@owner_users_management.message(
-    F.text.startswith("/delete_user_"), UsersManagement.search_name
-)
+# @owner_users_management.message(
+#     F.text.startswith("/delete_user_"), UsersManagement.search_name
+# )
 @owner_users_management.callback_query(F.data.startswith("delete_user_"))
 async def delete_user(event, state: FSMContext, l10n: FluentLocalization):
     if isinstance(event, CallbackQuery):
