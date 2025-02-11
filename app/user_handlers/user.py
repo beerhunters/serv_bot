@@ -1,4 +1,3 @@
-# import random
 import re
 
 from aiogram import Router, F
@@ -15,7 +14,6 @@ from fluent.runtime import FluentLocalization
 from app.database.requests import create_or_update_user
 import app.user_kb.keyboards as kb
 
-# from config import BOT_ADMINS, INFO_USER, BOT_OWNERS, GREETINGS_USER, GROUP_ID, REG_INFO
 from config import BOT_ADMINS, BOT_OWNERS, GROUP_ID, REG_INFO
 from filters import IsUserFilter
 from tools.tools import send_localized_message
@@ -344,14 +342,13 @@ async def reg_email(message: Message, state: FSMContext, l10n: FluentLocalizatio
         ),  # Используем локализованный текст для имени группы
         member_limit=1,
     )
-    # invite_link = ""
     # Локализованный текст для успешной регистрации
     successfully_registered = (
         l10n.format_value("registration_success")
         + "\n\n"
         + REG_INFO.format(invite_link.invite_link)
-        # + REG_INFO.format(invite_link)
     )
+    # successfully_registered = "Ok"
     await message.answer(
         successfully_registered, reply_markup=await kb.user_main(l10n=l10n)
     )
@@ -387,7 +384,6 @@ async def reg_email(message: Message, state: FSMContext, l10n: FluentLocalizatio
                 admin,
                 info_new_user,
                 reply_markup=await kb.create_buttons(l10n=l10n),
-                # reply_markup=await kb.create_buttons(),
             )
         except Exception as e:
             await message.bot.send_message(
@@ -396,10 +392,6 @@ async def reg_email(message: Message, state: FSMContext, l10n: FluentLocalizatio
             )
 
 
-# @user_router.callback_query(F.data == "info_user")
-# async def info(callback: CallbackQuery):
-#     await callback.message.edit_text(INFO_USER, reply_markup=await kb.create_buttons())
-#     await callback.answer()
 @user_router.callback_query(F.data == "info_user")
 async def info(callback: CallbackQuery, l10n: FluentLocalization):
     await send_localized_message(
@@ -407,7 +399,6 @@ async def info(callback: CallbackQuery, l10n: FluentLocalization):
         l10n,
         "info_user",  # Ключ для локализованного текста регистрации
         reply_markup=await kb.create_buttons(l10n=l10n),
-        # reply_markup=await kb.create_buttons(),
     )
 
 
