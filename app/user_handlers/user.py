@@ -337,25 +337,24 @@ async def reg_email(message: Message, state: FSMContext, l10n: FluentLocalizatio
     await state.clear()
 
     # Создаем ссылку для приглашения
-    # invite_link = await message.bot.create_chat_invite_link(
-    #     chat_id=GROUP_ID,
-    #     name=l10n.format_value(
-    #         "join_group"
-    #     ),  # Используем локализованный текст для имени группы
-    #     member_limit=1,
-    # )
-    invite_link = ""
+    invite_link = await message.bot.create_chat_invite_link(
+        chat_id=GROUP_ID,
+        name=l10n.format_value(
+            "join_group"
+        ),  # Используем локализованный текст для имени группы
+        member_limit=1,
+    )
+    # invite_link = ""
     # Локализованный текст для успешной регистрации
     successfully_registered = (
         l10n.format_value("registration_success")
         + "\n\n"
-        # + REG_INFO.format(invite_link.invite_link)
-        + REG_INFO.format(invite_link)
+        + REG_INFO.format(invite_link.invite_link)
+        # + REG_INFO.format(invite_link)
     )
     await message.answer(
         successfully_registered, reply_markup=await kb.user_main(l10n=l10n)
     )
-    # await message.answer(successfully_registered, reply_markup=await kb.user_main())
 
     # Разбиваем ФИО по пробелам
     name_parts = data["name"].split()
