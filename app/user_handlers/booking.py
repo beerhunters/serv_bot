@@ -113,7 +113,7 @@ async def set_promocode(message: Message, state: FSMContext, l10n: FluentLocaliz
         # Продолжить обработку без промокода
         promocode_text = l10n.format_value("promo_skipped")
         await state.set_state(BookingTariff.payment)
-        await get_payment(message, promocode_text, state)
+        await get_payment(message, promocode_text, state, l10n=l10n)
         return
     # Получаем введённый промокод
     entered_promocode = message.text.strip()
