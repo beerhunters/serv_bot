@@ -293,8 +293,8 @@ async def get_payment(
         return
     else:
         payment_id, confirmation_url = await create_payment(
-            formatted_description, amount=amount_w_discount
-        )
+            formatted_description, amount=amount_w_discount,
+        l10n=l10n)
         await update_booking_fields(booking_id=booking.id, payment_id=payment_id)
         # Сохраняем ID бронирования в FSM
         await state.update_data(booking_id=booking.id, payment_id=payment_id)
@@ -302,7 +302,7 @@ async def get_payment(
         # Отправляем сообщение о платеже и сохраняем его объект
         payment_message = await message.answer(
             text=f"{promocode_text}\n\n{tariff.description}",
-            reply_markup=await kb.payment(confirmation_url, amount=amount_w_discount),
+            reply_markup=await kb.payment(confirmation_url, amount=amount_w_discount, l10n=l10n),
         )
         # Сохраняем объект сообщения в состоянии
         await state.update_data(payment_message_id=payment_message.message_id)
@@ -418,8 +418,8 @@ async def poll_payment_status(
 
 
 @booking_router.callback_query(F.data == "cancel_pay", BookingTariff.status_payment)
-async def cancel_payment(callback: CallbackQuery, state: FSMContext):
-    await cancel_payment_handler(callback, state)
+async def cancel_payment(callback: CallbackQuery, state: FSMContext, l10n: FluentLocalization):
+    await cancel_payment_handler(callback, state, l10n=l10n)
 
 
 async def generate_booking_message(

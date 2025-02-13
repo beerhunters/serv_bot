@@ -84,7 +84,7 @@ async def quiz_selected(
     await state.update_data(last_message_id=last_message_id)
     # Сохраняем данные и начинаем квиз
     await state.update_data(quiz_id=quiz["id"], score=0, current_question_index=0)
-    await ask_question(callback, state)
+    await ask_question(callback, state, l10n=l10n)
     await state.set_state(QuizStates.answering_questions)
 
 
@@ -99,7 +99,7 @@ async def ask_question(
     questions = await get_questions_for_quiz(quiz_id)
 
     if current_question_index >= len(questions):
-        await finish_quiz(callback, state)
+        await finish_quiz(callback, state, l10n=l10n)
         return
 
     question = questions[current_question_index]

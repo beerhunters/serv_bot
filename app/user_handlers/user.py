@@ -14,7 +14,7 @@ from fluent.runtime import FluentLocalization
 from app.database.requests import create_or_update_user
 import app.user_kb.keyboards as kb
 
-from config import BOT_ADMINS, BOT_OWNERS, GROUP_ID, REG_INFO
+from config import BOT_ADMINS, BOT_OWNERS, GROUP_ID
 from filters import IsUserFilter
 from tools.tools import send_localized_message
 
