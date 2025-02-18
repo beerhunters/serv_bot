@@ -1,4 +1,4 @@
-import json
+# import json
 import os
 import re
 from datetime import datetime
@@ -17,9 +17,9 @@ from app.database.models import (
     Booking,
     Guest,
     # Booking,
-    Quiz,
-    Question,
-    QuizResult,
+    # Quiz,
+    # Question,
+    # QuizResult,
     Admin,
     # Room,
 )
@@ -1142,61 +1142,61 @@ async def parse_quiz_file(file_path: str) -> list[dict[str, any]]:
     return quizzes
 
 
-@connection
-async def add_quiz(session, name: str, description: str) -> Quiz:
-    new_quiz = Quiz(name=name, description=description)
-    session.add(new_quiz)
-    await session.commit()
-    return new_quiz
+# @connection
+# async def add_quiz(session, name: str, description: str) -> Quiz:
+#     new_quiz = Quiz(name=name, description=description)
+#     session.add(new_quiz)
+#     await session.commit()
+#     return new_quiz
 
 
-@connection
-async def add_question(
-    session,
-    quiz_id: int,
-    question_text: str,
-    correct_answer: str,
-    answer_options: list[str],
-    photo_url: str = None,
-) -> None:
-    options_json = json.dumps(answer_options, ensure_ascii=False)
-    new_question = Question(
-        quiz_id=quiz_id,
-        question_text=question_text,
-        correct_answer=correct_answer,
-        answer_options=options_json,
-        photo_url=photo_url,
-    )
-    session.add(new_question)
-    await session.commit()
+# @connection
+# async def add_question(
+#     session,
+#     quiz_id: int,
+#     question_text: str,
+#     correct_answer: str,
+#     answer_options: list[str],
+#     photo_url: str = None,
+# ) -> None:
+#     options_json = json.dumps(answer_options, ensure_ascii=False)
+#     new_question = Question(
+#         quiz_id=quiz_id,
+#         question_text=question_text,
+#         correct_answer=correct_answer,
+#         answer_options=options_json,
+#         photo_url=photo_url,
+#     )
+#     session.add(new_question)
+#     await session.commit()
 
 
-@connection
-async def add_quizzes_from_file(session, file_path: str) -> None:
-    quizzes = await parse_quiz_file(file_path)
-    for quiz in quizzes:
-        # Проверяем, существует ли квиз с таким именем
-        existing_quiz = await session.execute(select(Quiz).filter_by(name=quiz["name"]))
-        existing_quiz = existing_quiz.scalar_one_or_none()
-
-        if not existing_quiz:
-            text = f"Квиз {quiz['name']} успешно добавлен!"
-            # Добавляем новый квиз
-            new_quiz = await add_quiz(quiz["name"], quiz["description"])
-
-            # Добавляем вопросы для нового квиза
-            for question in quiz["questions"]:
-                await add_question(
-                    quiz_id=new_quiz.id,
-                    question_text=question["question_text"],
-                    correct_answer=question["correct_answer"],
-                    answer_options=question["answer_options"],
-                    photo_url=question["photo_url"],
-                )
-        else:
-            text = f"Квиз {quiz['name']} уже существует!"
-    await session.commit()
-    return text
+# @connection
+# async def add_quizzes_from_file(session, file_path: str) -> None:
+#     quizzes = await parse_quiz_file(file_path)
+#     for quiz in quizzes:
+#         # Проверяем, существует ли квиз с таким именем
+#         existing_quiz = await session.execute(select(Quiz).filter_by(name=quiz["name"]))
+#         existing_quiz = existing_quiz.scalar_one_or_none()
+#
+#         if not existing_quiz:
+#             text = f"Квиз {quiz['name']} успешно добавлен!"
+#             # Добавляем новый квиз
+#             new_quiz = await add_quiz(quiz["name"], quiz["description"])
+#
+#             # Добавляем вопросы для нового квиза
+#             for question in quiz["questions"]:
+#                 await add_question(
+#                     quiz_id=new_quiz.id,
+#                     question_text=question["question_text"],
+#                     correct_answer=question["correct_answer"],
+#                     answer_options=question["answer_options"],
+#                     photo_url=question["photo_url"],
+#                 )
+#         else:
+#             text = f"Квиз {quiz['name']} уже существует!"
+#     await session.commit()
+#     return text
 
 
 # @connection
@@ -1249,49 +1249,49 @@ async def add_quizzes_from_file(session, file_path: str) -> None:
 #     return text
 
 
-@connection
-async def get_all_quizzes(session):
-    result = await session.execute(select(Quiz))
-    quizzes = result.scalars().all()  # Получаем все квизы как список объектов Quiz
-    quiz_data = [{"id": quiz.id, "name": quiz.name} for quiz in quizzes]
-    return quiz_data
+# @connection
+# async def get_all_quizzes(session):
+#     result = await session.execute(select(Quiz))
+#     quizzes = result.scalars().all()  # Получаем все квизы как список объектов Quiz
+#     quiz_data = [{"id": quiz.id, "name": quiz.name} for quiz in quizzes]
+#     return quiz_data
 
 
-@connection
-async def get_questions_for_quiz(session, quiz_id: int) -> list[dict[str, any]]:
-    result = await session.execute(select(Question).filter_by(quiz_id=quiz_id))
-    questions = result.scalars().all()
-
-    return [
-        {
-            "id": question.id,
-            "quiz_id": question.quiz_id,
-            "question_text": question.question_text,
-            "correct_answer": question.correct_answer,
-            "answer_options": json.loads(
-                question.answer_options
-            ),  # Преобразуем JSON обратно в список
-            "photo_url": question.photo_url,
-        }
-        for question in questions
-    ]
-
-
-@connection
-async def record_quiz_result(
-    session, user_id: int, quiz_id: int, score: int, completed_at: str
-) -> None:
-    new_result = QuizResult(
-        user_id=user_id, quiz_id=quiz_id, score=score, completed_at=completed_at
-    )
-    session.add(new_result)
-    await session.commit()
+# @connection
+# async def get_questions_for_quiz(session, quiz_id: int) -> list[dict[str, any]]:
+#     result = await session.execute(select(Question).filter_by(quiz_id=quiz_id))
+#     questions = result.scalars().all()
+#
+#     return [
+#         {
+#             "id": question.id,
+#             "quiz_id": question.quiz_id,
+#             "question_text": question.question_text,
+#             "correct_answer": question.correct_answer,
+#             "answer_options": json.loads(
+#                 question.answer_options
+#             ),  # Преобразуем JSON обратно в список
+#             "photo_url": question.photo_url,
+#         }
+#         for question in questions
+#     ]
 
 
-@connection
-async def get_all_quiz_results(session) -> list[QuizResult]:
-    results = await session.execute(select(QuizResult))
-    return results.scalars().all()
+# @connection
+# async def record_quiz_result(
+#     session, user_id: int, quiz_id: int, score: int, completed_at: str
+# ) -> None:
+#     new_result = QuizResult(
+#         user_id=user_id, quiz_id=quiz_id, score=score, completed_at=completed_at
+#     )
+#     session.add(new_result)
+#     await session.commit()
+
+
+# @connection
+# async def get_all_quiz_results(session) -> list[QuizResult]:
+#     results = await session.execute(select(QuizResult))
+#     return results.scalars().all()
 
 
 @connection

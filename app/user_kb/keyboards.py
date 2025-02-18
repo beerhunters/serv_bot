@@ -77,7 +77,7 @@ async def user_main(l10n: FluentLocalization) -> InlineKeyboardMarkup:
         (l10n.format_value("register_guest_button"), "reg_guest", "callback"),
         (l10n.format_value("booking_button"), "booking", "callback"),
         (l10n.format_value("print_button"), "print_doc", "callback"),
-        (l10n.format_value("quiz_button"), "start_quiz", "callback"),
+        # (l10n.format_value("quiz_button"), "start_quiz", "callback"),
         (l10n.format_value("rules_button"), RULES_URL, "webapp"),
         (l10n.format_value("info_button"), "info_user", "callback"),
         (l10n.format_value("contact_admin_button"), ADMIN_URL, "url"),

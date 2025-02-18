@@ -7,7 +7,7 @@ from sqlalchemy import (
     DateTime,
     Integer,
     CheckConstraint,
-    UniqueConstraint,
+    # UniqueConstraint,
     Float,
 )
 from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase, relationship
@@ -113,22 +113,6 @@ class Location(Base):
     tickets: Mapped[list["Ticket"]] = relationship("Ticket", back_populates="location")
 
 
-# class Tariff(Base):
-#     __tablename__ = "tariffs"
-#
-#     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-#     name: Mapped[str] = mapped_column(String(20), nullable=True)
-#     description: Mapped[str] = mapped_column(String(128), default="Just a description")
-#     price: Mapped[int] = mapped_column(Integer)
-#     service_id: Mapped[int] = mapped_column(Integer, nullable=True)
-#     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-#
-#     # reservations: Mapped[list["Reservation"]] = relationship(
-#     #     "Reservation", back_populates="tariff"
-#     # )
-#     bookings: Mapped[list["Booking"]] = relationship("Booking", back_populates="tariff")
-
-
 class Promocode(Base):
     __tablename__ = "promocodes"
 
@@ -139,61 +123,9 @@ class Promocode(Base):
     expiration_date: Mapped[DateTime] = mapped_column(DateTime, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=False)
 
-    # reservations: Mapped[list["Reservation"]] = relationship(
-    #     "Reservation", back_populates="promocode"
-    # )
     bookings: Mapped[list["Booking"]] = relationship(
         "Booking", back_populates="promocode"
     )
-
-
-# class Reservation(Base):
-#     __tablename__ = "reservations"
-#
-#     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-#     user_id: Mapped[int] = mapped_column(ForeignKey("users.tg_id"), nullable=False)
-#     visit_date: Mapped[DateTime] = mapped_column(DateTime, nullable=True)
-#     # visit_date: Mapped[str] = mapped_column(String(20), nullable=True)
-#     tariff_name: Mapped[str] = mapped_column(ForeignKey("tariffs.name"), nullable=False)
-#     promocode_name: Mapped[str] = mapped_column(
-#         ForeignKey("promocodes.name"), nullable=True
-#     )
-#     amount_wo_discount: Mapped[int] = mapped_column(Integer, nullable=True)
-#     amount_w_discount: Mapped[int] = mapped_column(Integer, nullable=True)
-#     payment_id: Mapped[str] = mapped_column(String(20), nullable=True)
-#     paid: Mapped[bool] = mapped_column(Boolean, default=False)
-#     rubitime_id: Mapped[int] = mapped_column(Integer, nullable=True)
-#
-#     # Связи с другими моделями
-#     user: Mapped["User"] = relationship("User", back_populates="reservations")
-#     tariff: Mapped["Tariff"] = relationship("Tariff", back_populates="reservations")
-#     promocode: Mapped["Promocode"] = relationship(
-#         "Promocode", back_populates="reservations"
-#     )
-#
-#     # @property
-#     # def promocode_name(self):
-#     #     return self.promocode.name if self.promocode else None
-#     #
-#     # @property
-#     # def tariff_name(self):
-#     #     return self.tariff.name if self.tariff else None
-#     #
-#     # @property
-#     # def user_name(self):
-#     #     return self.user.name if self.user else None
-#     # Пользовательский атрибут для читаемых заголовков
-#     __labels__ = {
-#         "id": "Номер",
-#         "user_id": "ID пользователя",
-#         "visit_date": "Дата визита",
-#         "tariff_name": "Тариф",
-#         "promocode_name": "Промокод",
-#         "amount_wo_discount": "Сумма",
-#         "amount_w_discount": "Сумма со скидкой",
-#         "payment_id": "ID оплаты",
-#         "paid": "Статус оплаты",
-#     }
 
 
 class Booking(Base):
@@ -222,13 +154,6 @@ class Booking(Base):
             "start_time LIKE '__:__' AND end_time LIKE '__:__'",
             name="check_time_format",
         ),
-        #     UniqueConstraint(
-        #         "visit_date",
-        #         "start_time",
-        #         "end_time",
-        #         "tariff_id",
-        #         name="unique_booking_for_tariff",
-        #     ),
     )
     # Связи с другими моделями
     user: Mapped["User"] = relationship("User", back_populates="bookings")
@@ -285,108 +210,58 @@ class Guest(Base):
     user: Mapped["User"] = relationship("User", back_populates="guests")
 
 
-# class Booking(Base):
-#     __tablename__ = "bookings"
+# class Quiz(Base):
+#     __tablename__ = "quizzes"
 #
-#     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-#     user_id: Mapped[int] = mapped_column(ForeignKey("users.tg_id"), nullable=False)
+#     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+#     name: Mapped[str] = mapped_column(String(20), unique=True, nullable=False)
+#     description: Mapped[str] = mapped_column(String(128), nullable=False)
 #
-#     room_id: Mapped[int] = mapped_column(ForeignKey("rooms.id"), nullable=False)
-#
-#     visit_date: Mapped[str] = mapped_column(String(20), nullable=True)
-#     start_time: Mapped[str] = mapped_column(String(20), nullable=True)  # Время начала
-#     end_time: Mapped[str] = mapped_column(String(20), nullable=True)  # Время окончания
-#     duration: Mapped[int] = mapped_column(Integer, nullable=True)
-#     confirmed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=True)
-#     rubitime_id: Mapped[int] = mapped_column(Integer, nullable=True)
-#     removed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=True)
-#
-#     # Добавляем проверку формата времени HH:MM
-#     __table_args__ = (
-#         CheckConstraint(
-#             "start_time LIKE '__:__' AND end_time LIKE '__:__'",
-#             name="check_time_format",
-#         ),
-#         # Уникальность брони в пределах одного времени
-#         UniqueConstraint(
-#             "user_id",
-#             "room_id",
-#             "visit_date",
-#             "start_time",
-#             "end_time",
-#             name="user_booking_unique",
-#         ),
+#     questions: Mapped["Question"] = relationship(
+#         "Question", back_populates="quiz", cascade="all, delete-orphan"
 #     )
+#     quiz_results: Mapped["QuizResult"] = relationship(
+#         "QuizResult", back_populates="quiz", cascade="all, delete-orphan"
+#     )
+
+
+# class Question(Base):
+#     __tablename__ = "questions"
 #
-#     user: Mapped["User"] = relationship("User", back_populates="bookings")
-#     room: Mapped["Room"] = relationship("Room", back_populates="bookings")
+#     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+#     quiz_id: Mapped[int] = mapped_column(
+#         ForeignKey("quizzes.id", ondelete="CASCADE"), nullable=False
+#     )
+#     question_text: Mapped[str] = mapped_column(String, nullable=False)
+#     correct_answer: Mapped[str] = mapped_column(String, nullable=False)
+#     answer_options: Mapped[str] = mapped_column(String, nullable=False)
+#     photo_url: Mapped[str] = mapped_column(String(128), nullable=True)
 #
+#     quiz: Mapped["Quiz"] = relationship("Quiz", back_populates="questions")
+
+
+# class QuizResult(Base):
+#     __tablename__ = "quiz_results"
 #
-# class Room(Base):
-#     __tablename__ = "rooms"
+#     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+#     user_id: Mapped[int] = mapped_column(ForeignKey("users.tg_id"), nullable=False)
+#     quiz_id: Mapped[int] = mapped_column(
+#         ForeignKey("quizzes.id", ondelete="CASCADE"), nullable=False
+#     )
+#     # quiz_name: Mapped[str] = mapped_column(ForeignKey('quizzes.name', ondelete='CASCADE'), nullable=False)
+#     score: Mapped[int] = mapped_column(Integer, nullable=False)
+#     completed_at: Mapped[str] = mapped_column(String(20), nullable=False)
 #
-#     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-#     name: Mapped[str] = mapped_column(String(255), nullable=False)
-#     capacity: Mapped[int] = mapped_column(Integer, nullable=False)
-#     type: Mapped[str] = mapped_column(String(50), nullable=True)
-#     service_id: Mapped[int] = mapped_column(Integer, nullable=True)
-#     state: Mapped[bool] = mapped_column(Boolean, default=True)
+#     quiz: Mapped["Quiz"] = relationship("Quiz", back_populates="quiz_results")
 #
-#     bookings: Mapped["Booking"] = relationship("Booking", back_populates="room")
-
-
-class Quiz(Base):
-    __tablename__ = "quizzes"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    name: Mapped[str] = mapped_column(String(20), unique=True, nullable=False)
-    description: Mapped[str] = mapped_column(String(128), nullable=False)
-
-    questions: Mapped["Question"] = relationship(
-        "Question", back_populates="quiz", cascade="all, delete-orphan"
-    )
-    quiz_results: Mapped["QuizResult"] = relationship(
-        "QuizResult", back_populates="quiz", cascade="all, delete-orphan"
-    )
-
-
-class Question(Base):
-    __tablename__ = "questions"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    quiz_id: Mapped[int] = mapped_column(
-        ForeignKey("quizzes.id", ondelete="CASCADE"), nullable=False
-    )
-    question_text: Mapped[str] = mapped_column(String, nullable=False)
-    correct_answer: Mapped[str] = mapped_column(String, nullable=False)
-    answer_options: Mapped[str] = mapped_column(String, nullable=False)
-    photo_url: Mapped[str] = mapped_column(String(128), nullable=True)
-
-    quiz: Mapped["Quiz"] = relationship("Quiz", back_populates="questions")
-
-
-class QuizResult(Base):
-    __tablename__ = "quiz_results"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.tg_id"), nullable=False)
-    quiz_id: Mapped[int] = mapped_column(
-        ForeignKey("quizzes.id", ondelete="CASCADE"), nullable=False
-    )
-    # quiz_name: Mapped[str] = mapped_column(ForeignKey('quizzes.name', ondelete='CASCADE'), nullable=False)
-    score: Mapped[int] = mapped_column(Integer, nullable=False)
-    completed_at: Mapped[str] = mapped_column(String(20), nullable=False)
-
-    quiz: Mapped["Quiz"] = relationship("Quiz", back_populates="quiz_results")
-
-    # Пользовательский атрибут для читаемых заголовков
-    __labels__ = {
-        "id": "№",
-        "user_id": "ID пользователя",
-        "quiz_id": "ID квиза",
-        "score": "Очки",
-        "completed_at": "Дата завершения",
-    }
+#     # Пользовательский атрибут для читаемых заголовков
+#     __labels__ = {
+#         "id": "№",
+#         "user_id": "ID пользователя",
+#         "quiz_id": "ID квиза",
+#         "score": "Очки",
+#         "completed_at": "Дата завершения",
+#     }
 
 
 class Admin(Base):
@@ -414,6 +289,6 @@ class Adjustment(Base):
     )  # Поле "Значение" необязательное, тип можно изменить
 
 
-async def async_main():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+# async def async_main():
+#     async with engine.begin() as conn:
+#         await conn.run_sync(Base.metadata.create_all)

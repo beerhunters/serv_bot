@@ -14,38 +14,42 @@ from app.owner_handlers.locations_management import owner_locations_management
 from app.owner_handlers.booking_mr_management import owner_booking_mr_management
 from app.owner_handlers.printing_management import owner_print_management
 from app.owner_handlers.promocodes_management import owner_promo_management
-from app.owner_handlers.quizzes_management import owner_quizzes_management
+
+# from app.owner_handlers.quizzes_management import owner_quizzes_management
 from app.owner_handlers.tariffs_management import owner_tariff_management
 from app.owner_handlers.users_management import owner_users_management
 from app.user_handlers.booking import booking_router
 from app.user_handlers.booking_meeting_room import meeting_room_router
-from app.database.models import async_main
+
+# from app.database.models import async_main
 from app.admin_handlers.admin import admin_router
 from app.exception_handlers.exceptions import error_router
 from app.user_handlers.guests import guest_router
 from app.owner_handlers.owner import owner_router
 from app.user_handlers.printing import printer_router
-from app.user_handlers.quiz import quiz_router
+
+# from app.user_handlers.quiz import quiz_router
 from app.user_handlers.ticket import ticket_router
 from app.user_handlers.user import user_router
 
 from config import BOT_TOKEN
 from middlewares.localization import L10nMiddleware
 
-from middlewares.user_logging import LoggingMiddleware
+from middlewares.user_logging import LoggingMiddleware, logger
 from scheduler import setup_scheduler
 
 logging.basicConfig(level=logging.INFO)
 
 
 async def main():
-    await async_main()
+    # await async_main()
     bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     dp = Dispatcher()
     # Middleware registration
     dp.update.middleware(LoggingMiddleware())
     dp.message.outer_middleware(L10nMiddleware(default_locale="ru"))
     dp.callback_query.outer_middleware(L10nMiddleware(default_locale="ru"))
+    # Router registration
     dp.include_routers(
         error_router,
         owner_router,
@@ -56,7 +60,7 @@ async def main():
         owner_tariff_management,
         owner_booking_mr_management,
         owner_locations_management,
-        owner_quizzes_management,
+        # owner_quizzes_management,
         admin_router,
         admin_ticket_router,
         admin_report_router,
@@ -68,23 +72,21 @@ async def main():
         guest_router,
         meeting_room_router,
         printer_router,
-        quiz_router,
+        # quiz_router,
     )
 
     # Запуск асинхронного планировщика
     scheduler = setup_scheduler(bot)
 
-    await dp.start_polling(bot)
-
-    # # Starting the bot
-    # try:
-    #     logger.info("Бот запущен и работает...")
-    #     await dp.start_polling(bot)
-    # except Exception as e:
-    #     logger.error(f"Ошибка при работе бота: {e}")
-    # finally:
-    #     scheduler.shutdown()  # Останавливаем планировщик перед завершением работы бота
-    #     await bot.session.close()
+    # Starting the bot
+    try:
+        logger.info("Бот запущен и работает...")
+        await dp.start_polling(bot)
+    except Exception as e:
+        logger.error(f"Ошибка при работе бота: {e}")
+    finally:
+        scheduler.shutdown()  # Останавливаем планировщик перед завершением работы бота
+        await bot.session.close()
 
 
 if __name__ == "__main__":
