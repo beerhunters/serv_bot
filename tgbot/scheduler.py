@@ -2,7 +2,7 @@ import logging
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from tgbot.database.requests import get_unclosed_tickets_count
-from config import BOT_ADMINS
+from tgbot.config import BOT_ADMINS
 from aiogram import Bot
 import tgbot.keyboards.admin_kb.keyboards as kb
 
