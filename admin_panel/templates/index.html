@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <title>PARTA Admin</title>
+</head>
+<body>
+    <h1>Пользователи</h1>
+    <table>
+        <tr><th>ID</th><th>Имя</th><th>TG ID</th></tr>
+        {% for user in users %}
+        <tr><td>{{ user.id }}</td><td>{{ user.name }}</td><td>{{ user.tg_id }}</td></tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
