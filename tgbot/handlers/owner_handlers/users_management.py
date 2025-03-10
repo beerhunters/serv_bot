@@ -10,7 +10,10 @@ from fluent.runtime import FluentLocalization
 
 import tgbot.keyboards.owner_kb.keyboards as kb
 import tgbot.keyboards.general_keyboards as gkb
-from tgbot.handlers.admin_handlers.save_xlsx import save_report_to_excel
+from tgbot.handlers.admin_handlers.save_xlsx import (
+    save_report_to_excel,
+    save_report_to_csv,
+)
 from tgbot.database.models import User
 from tgbot.database.requests import (
     get_all_users,
@@ -127,7 +130,10 @@ async def download_users(
 
     if users:
         await callback.message.delete()
-        file_path = await save_report_to_excel(User, "Пользователи", users)
+        # file_path = await save_report_to_excel(User, "Пользователи", users)
+        file_path = await save_report_to_csv(
+            User, "Пользователи", users
+        )  # Заменили на save_report_to_csv
         document = FSInputFile(file_path)
         await callback.message.answer_document(document)
         if os.path.exists(file_path):

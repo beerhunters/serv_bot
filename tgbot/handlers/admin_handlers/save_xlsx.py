@@ -80,3 +80,45 @@ async def save_report_to_excel(model, list_name, items, first_day=None):
     wb.save(file_path)
 
     return file_path
+
+
+import csv
+import os
+from datetime import datetime
+
+
+async def save_report_to_csv(model, list_name, items, first_day=None):
+    if first_day is not None:
+        # Преобразуем первый день в объект datetime, чтобы извлечь название месяца и год
+        first_day_date = datetime.strptime(first_day, "%d.%m.%Y")
+        # Название файла по формату месяц+год
+        file_name = f"{model.__tablename__}_{first_day_date.strftime('%B_%Y')}.csv"
+    else:
+        file_name = f"{model.__tablename__}.csv"
+
+    # Путь для сохранения файла
+    file_path = os.path.join(os.getcwd(), file_name)
+
+    # Получаем названия колонок напрямую из модели (без читаемых заголовков)
+    column_names = [column.key for column in class_mapper(model).columns]
+
+    # Записываем данные в CSV
+    with open(file_path, "w", newline="", encoding="utf-8") as csvfile:
+        writer = csv.writer(csvfile)
+
+        # Записываем заголовки как есть (имена полей модели)
+        writer.writerow(column_names)
+
+        # Заполняем данные без дополнительного форматирования
+        for item in items:
+            row_data = []
+            for column in column_names:
+                value = getattr(item, column)
+                if isinstance(value, datetime):
+                    value = value.isoformat() if value else ""  # Даты в формате ISO
+                elif value is None:
+                    value = ""  # NULL заменяем на пустую строку
+                row_data.append(value)
+            writer.writerow(row_data)
+
+    return file_path
